@@ -1,4 +1,4 @@
-# Super Cluster - Primary Region `us-east-1`
+# Windows - Primary Region `us-east-1`
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements

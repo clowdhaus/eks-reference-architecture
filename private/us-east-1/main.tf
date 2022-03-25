@@ -10,7 +10,7 @@ terraform {
 
   backend "s3" {
     bucket         = "clowd-haus-iac-us-east-1"
-    key            = "eks-reference-architecture/multi-region/us-west-2/terraform.tfstate"
+    key            = "eks-reference-architecture/private/us-east-1/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "clowd-haus-terraform-state"
     encrypt        = true
@@ -31,17 +31,24 @@ provider "aws" {
 ################################################################################
 
 locals {
-  # name        = "multi-region"
-  region      = "us-west-2"
-  environment = "nonprod"
+  name        = "eks-reference-private"
+  region      = "us-east-1"
+  environment = "prod"
+
+  account_id = data.aws_caller_identity.current.account_id
+  partition  = data.aws_partition.current.partition
+  dns_suffix = data.aws_partition.current.dns_suffix
+
+  cluster_version = "1.21"
 }
 
 ################################################################################
 # Common Data
 ################################################################################
 
-# tflint-ignore: terraform_unused_declarations
 data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
 
 ################################################################################
 # Common Modules

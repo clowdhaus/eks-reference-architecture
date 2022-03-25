@@ -1,20 +1,30 @@
-# EKS Reference Infrastructure
+# EKS Reference Architecture
 
-## [Multi-Region](https://github.com/clowdhaus/eks-reference-infrastructure/tree/main/multi-region)
+## [IPv6](https://github.com/clowdhaus/eks-reference-architecture/tree/main/ipv6)
 
-- Mult-region routing
-  - AWS Route53 DNS routing (?)
-  - Service mesh routing (?)
-  - AWS CloudMap routing (?)
+- TODO
 
-## [Secure](https://github.com/clowdhaus/eks-reference-infrastructure/tree/main/secure)
+## [Karpenter](https://github.com/clowdhaus/eks-reference-architecture/tree/main/karpenter)
+
+- TODO
+
+## [Multi-Region](https://github.com/clowdhaus/eks-reference-architecture/tree/main/multi-region)
+
+- TODO
+
+## [Private](https://github.com/clowdhaus/eks-reference-architecture/tree/main/private)
 
 - Private endpoint only
 - BottleRocket OS nodes
 
-## [Super Cluster](https://github.com/clowdhaus/eks-reference-infrastructure/tree/main/super-cluster)
+## [Restricted Public Endpoint](https://github.com/clowdhaus/eks-reference-architecture/tree/main/restricted-public-endpoint)
 
-- IPv6
+- TODO
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+## [Serverless](https://github.com/clowdhaus/eks-reference-architecture/tree/main/serverless)
+
+- TODO
+
+## [Windows](https://github.com/clowdhaus/eks-reference-architecture/tree/main/windows)
+
+- TODO

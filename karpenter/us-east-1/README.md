@@ -1,4 +1,4 @@
-# Shared Services - Primary Region `us-east-1`
+# Karpenter - Primary Region `us-east-1`
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements

@@ -10,7 +10,7 @@ terraform {
 
   backend "s3" {
     bucket         = "clowd-haus-iac-us-east-1"
-    key            = "eks-reference-infrastructure/secure/us-east-1/terraform.tfstate"
+    key            = "eks-reference-architecture/restricted-public-endpoint/us-east-1/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "clowd-haus-terraform-state"
     encrypt        = true
@@ -31,24 +31,17 @@ provider "aws" {
 ################################################################################
 
 locals {
-  name        = "eks-reference-secure"
+  # name        = "restricted-public-endpoint"
   region      = "us-east-1"
-  environment = "prod"
-
-  account_id = data.aws_caller_identity.current.account_id
-  partition  = data.aws_partition.current.partition
-  dns_suffix = data.aws_partition.current.dns_suffix
-
-  cluster_version = "1.21"
+  environment = "nonprod"
 }
 
 ################################################################################
 # Common Data
 ################################################################################
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
 
 ################################################################################
 # Common Modules
@@ -59,5 +52,5 @@ module "tags" {
   source = "git@github.com:clowdhaus/terraform-tags.git"
 
   environment = local.environment
-  repository  = "https://github.com/clowdhaus/eks-reference-infrastructure"
+  repository  = "https://github.com/clowdhaus/eks-reference-architecture"
 }

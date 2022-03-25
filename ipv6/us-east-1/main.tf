@@ -10,7 +10,7 @@ terraform {
 
   backend "s3" {
     bucket         = "clowd-haus-iac-us-east-1"
-    key            = "eks-reference-infrastructure/shared-services/us-east-1/terraform.tfstate"
+    key            = "eks-reference-architecture/ipv6/us-east-1/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "clowd-haus-terraform-state"
     encrypt        = true
@@ -31,7 +31,7 @@ provider "aws" {
 ################################################################################
 
 locals {
-  # name        = "shared-services"
+  # name        = "ipv6"
   region      = "us-east-1"
   environment = "nonprod"
 }
@@ -52,5 +52,5 @@ module "tags" {
   source = "git@github.com:clowdhaus/terraform-tags.git"
 
   environment = local.environment
-  repository  = "https://github.com/clowdhaus/eks-reference-infrastructure"
+  repository  = "https://github.com/clowdhaus/eks-reference-architecture"
 }

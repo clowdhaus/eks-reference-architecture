@@ -1,4 +1,4 @@
-# Secure EKS Cluster
+# Private EKS Cluster
 
 ## Features
 

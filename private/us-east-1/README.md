@@ -1,4 +1,4 @@
-# Secure - Primary Region `us-east-1`
+# Private - Primary Region `us-east-1`
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements

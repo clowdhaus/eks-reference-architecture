@@ -10,7 +10,7 @@ terraform {
 
   backend "s3" {
     bucket         = "clowd-haus-iac-us-east-1"
-    key            = "eks-reference-architecture/multi-region/us-west-2/terraform.tfstate"
+    key            = "eks-reference-architecture/karpenter/us-east-1/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "clowd-haus-terraform-state"
     encrypt        = true
@@ -31,8 +31,8 @@ provider "aws" {
 ################################################################################
 
 locals {
-  # name        = "multi-region"
-  region      = "us-west-2"
+  # name        = "karpenter"
+  region      = "us-east-1"
   environment = "nonprod"
 }
 

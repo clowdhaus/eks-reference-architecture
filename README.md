@@ -6,7 +6,7 @@
 
 ## [Karpenter](https://github.com/clowdhaus/eks-reference-architecture/tree/main/karpenter)
 
-- TODO
+- Karpenter managed cluster for autoscaling compute resources
 
 ## [Multi-Region](https://github.com/clowdhaus/eks-reference-architecture/tree/main/multi-region)
 

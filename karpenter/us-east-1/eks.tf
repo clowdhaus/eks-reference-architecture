@@ -43,8 +43,3 @@ module "eks" {
     "karpenter.sh/discovery" = local.name
   }
 }
-
-resource "aws_iam_instance_profile" "karpenter" {
-  name = "KarpenterNodeInstanceProfile-${local.name}"
-  role = module.eks.eks_managed_node_groups["initial"].iam_role_name
-}

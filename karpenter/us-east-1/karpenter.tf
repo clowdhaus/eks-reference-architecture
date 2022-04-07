@@ -26,6 +26,11 @@ module "karpenter_irsa" {
 # Karpenter Helm Chart
 ################################################################################
 
+resource "aws_iam_instance_profile" "karpenter" {
+  name = "KarpenterNodeInstanceProfile-${local.name}"
+  role = module.eks.eks_managed_node_groups["initial"].iam_role_name
+}
+
 resource "helm_release" "karpenter" {
   namespace        = "karpenter"
   create_namespace = true

@@ -4,6 +4,10 @@ The configurations captured within this project are intended to serve as referen
 
 The configurations provided are not intended to be consumed as a Terraform module, nor are they necessarily designed to be "prodcution ready". The configurations can be greatly expanded to be closer to production ready, but are kept narrow so as to highlight the specific portions that fulfill their respective reference architecture.
 
+### ✅ [Inferentia](https://github.com/clowdhaus/eks-reference-architecture/tree/main/inferentia)
+
+- EKS cluster with AWS Neuron on AWS Inferentia instances
+
 ### 🚧 [IPv6](https://github.com/clowdhaus/eks-reference-architecture/tree/main/ipv6)
 
 - TODO

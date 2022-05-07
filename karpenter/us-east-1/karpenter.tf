@@ -4,7 +4,7 @@
 
 module "karpenter_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 4.15.1"
+  version = "~> 4.24"
 
   role_name                          = "karpenter-controller-${local.name}"
   attach_karpenter_controller_policy = true
@@ -29,6 +29,8 @@ module "karpenter_irsa" {
 resource "aws_iam_instance_profile" "karpenter" {
   name = "KarpenterNodeInstanceProfile-${local.name}"
   role = module.eks.eks_managed_node_groups["initial"].iam_role_name
+
+  tags = module.tags.tags
 }
 
 resource "helm_release" "karpenter" {
@@ -39,7 +41,7 @@ resource "helm_release" "karpenter" {
   repository = "https://charts.karpenter.sh"
   chart      = "karpenter"
   # Be sure to pull latest version of chart
-  version = "0.7.3"
+  version = "0.9.1"
 
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
@@ -65,45 +67,6 @@ resource "helm_release" "karpenter" {
 ################################################################################
 # Karpenter Provisioner
 ################################################################################
-
-# This will fail due to: https://github.com/hashicorp/terraform-provider-kubernetes/issues/1380
-# resource "kubernetes_manifest" "karpenter_provisioner" {
-#   manifest = {
-#     apiVersion = "karpenter.sh/v1alpha5"
-#     kind       = "Provisioner"
-#     metadata = {
-#       name = "default"
-#     }
-#     spec = {
-#       requirements = [{
-#         key      = "karpenter.sh/capacity-type"
-#         operator = "In"
-#         values   = ["spot"]
-#       }]
-#       limits = {
-#         resources = {
-#           cpu = 1000
-#         }
-#       }
-#       provider = {
-#         subnetSelector = {
-#           "karpenter.sh/discovery" = local.name
-#         }
-#         securityGroupSelector = {
-#           "karpenter.sh/discovery" = local.name
-#         }
-#         tags = {
-#           "karpenter.sh/discovery" = local.name
-#         }
-#       }
-#       ttlSecondsAfterEmpty = 30
-#     }
-#   }
-
-#   depends_on = [
-#     helm_release.karpenter
-#   ]
-# }
 
 # Workaround - https://github.com/hashicorp/terraform-provider-kubernetes/issues/1380#issuecomment-967022975
 resource "kubectl_manifest" "karpenter_provisioner" {

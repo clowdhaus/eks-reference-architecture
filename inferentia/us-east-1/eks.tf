@@ -1,6 +1,8 @@
 locals {
   sso_path    = "/aws-reserved/sso.amazonaws.com/"
   plugin_name = "neuron-device-plugin"
+
+  inferentia_instance_classes = ["inf1.xlarge", "inf1.2xlarge", "inf1.6xlarge", "inf1.4xlarge"]
 }
 
 data "aws_iam_roles" "sso_admin" {
@@ -55,6 +57,9 @@ module "eks" {
 # AWS Neuron Device
 ################################################################################
 
+# Hack to ensure cluster is ready to receive requests
+resource "kubectl_server_version" "current" {}
+
 resource "kubernetes_cluster_role_v1" "neuron_device" {
   metadata {
     name = local.plugin_name
@@ -83,6 +88,8 @@ resource "kubernetes_cluster_role_v1" "neuron_device" {
     resources  = ["events"]
     verbs      = ["create", "patch"]
   }
+
+  depends_on = [kubectl_server_version.current]
 }
 
 resource "kubernetes_service_account_v1" "neuron_device" {
@@ -90,6 +97,8 @@ resource "kubernetes_service_account_v1" "neuron_device" {
     name      = local.plugin_name
     namespace = "kube-system"
   }
+
+  depends_on = [kubectl_server_version.current]
 }
 
 resource "kubernetes_cluster_role_binding_v1" "neuron_device" {
@@ -110,9 +119,123 @@ resource "kubernetes_cluster_role_binding_v1" "neuron_device" {
   }
 }
 
-resource "kubectl_manifest" "neuron_device_plugin_daemonset" {
-  yaml_body = templatefile("templates/neuron-device-plugin.yaml", {
-    # https://gallery.ecr.aws/neuron/neuron-device-plugin
-    neuron_device_plugin_image = "public.ecr.aws/neuron/neuron-device-plugin:1.9.0.0"
-  })
+resource "kubernetes_daemon_set_v1" "neuron_device" {
+  metadata {
+    name      = kubernetes_service_account_v1.neuron_device.metadata[0].name
+    namespace = kubernetes_service_account_v1.neuron_device.metadata[0].namespace
+  }
+
+  spec {
+    selector {
+      match_labels = {
+        name = "${local.plugin_name}-ds"
+      }
+    }
+
+    strategy {
+      type = "RollingUpdate"
+    }
+
+    template {
+      metadata {
+        labels = {
+          name = "${local.plugin_name}-ds"
+        }
+        annotations = {
+          "scheduler.alpha.kubernetes.io/critical-pod" = ""
+        }
+      }
+
+      spec {
+        service_account_name = kubernetes_service_account_v1.neuron_device.metadata[0].name
+        priority_class_name  = "system-node-critical"
+
+        toleration {
+          key      = "CriticalAddonsOnly"
+          operator = "Exists"
+        }
+
+        toleration {
+          key      = "aws.amazon.com/neuron"
+          operator = "Exists"
+          effect   = "NoSchedule"
+        }
+
+        affinity {
+          node_affinity {
+            required_during_scheduling_ignored_during_execution {
+              node_selector_term {
+                match_expressions {
+                  key      = "beta.kubernetes.io/instance-type"
+                  operator = "In"
+                  values   = local.inferentia_instance_classes
+                }
+
+                match_expressions {
+                  key      = "node.kubernetes.io/instance-type"
+                  operator = "In"
+                  values   = local.inferentia_instance_classes
+                }
+              }
+            }
+          }
+        }
+
+        container {
+          # https://gallery.ecr.aws/neuron/neuron-device-plugin
+          image             = "public.ecr.aws/neuron/neuron-device-plugin:1.9.0.0"
+          name              = local.plugin_name
+          image_pull_policy = "Always"
+
+          env {
+            name  = "KUBECONFIG"
+            value = "/etc/kubernetes/kubelet.conf"
+          }
+
+          env {
+            name = "NODE_NAME"
+            value_from {
+              field_ref {
+                field_path = "spec.nodeName"
+              }
+            }
+          }
+
+          security_context {
+            allow_privilege_escalation = false
+
+            capabilities {
+              drop = ["ALL"]
+            }
+          }
+
+          volume_mount {
+            name       = "device-plugin"
+            mount_path = "/var/lib/kubelet/device-plugins"
+          }
+
+          volume_mount {
+            name       = "infa-map"
+            mount_path = "/run"
+          }
+        }
+
+        volume {
+          name = "device-plugin"
+
+          host_path {
+            path = "/var/lib/kubelet/device-plugins"
+          }
+        }
+
+        volume {
+          name = "infa-map"
+
+          host_path {
+            path = "/run"
+          }
+        }
+      }
+    }
+  }
 }

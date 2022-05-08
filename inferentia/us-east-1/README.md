@@ -30,9 +30,10 @@
 
 | Name | Type |
 |------|------|
-| [kubectl_manifest.neuron_device_plugin_daemonset](https://registry.terraform.io/providers/gavinbunney/kubectl/latest/docs/resources/manifest) | resource |
+| [kubectl_server_version.current](https://registry.terraform.io/providers/gavinbunney/kubectl/latest/docs/resources/server_version) | resource |
 | [kubernetes_cluster_role_binding_v1.neuron_device](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_binding_v1) | resource |
 | [kubernetes_cluster_role_v1.neuron_device](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_v1) | resource |
+| [kubernetes_daemon_set_v1.neuron_device](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/daemon_set_v1) | resource |
 | [kubernetes_service_account_v1.neuron_device](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account_v1) | resource |
 | [aws_iam_roles.sso_admin](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_roles) | data source |
 

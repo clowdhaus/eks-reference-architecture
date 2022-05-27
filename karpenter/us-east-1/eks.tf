@@ -1,9 +1,9 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 18.14.0"
+  version = "~> 18.21"
 
   cluster_name    = local.name
-  cluster_version = "1.21"
+  cluster_version = "1.22"
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
@@ -11,9 +11,23 @@ module "eks" {
   # Required for Karpenter role
   enable_irsa = true
 
-  # For this example, we will only use the EKS created primary security group
-  create_cluster_security_group = false
-  create_node_security_group    = false
+  node_security_group_additional_rules = {
+    ingress_nodes_karpenter_port = {
+      description                   = "Cluster API to Node group for Karpenter webhook"
+      protocol                      = "tcp"
+      from_port                     = 8443
+      to_port                       = 8443
+      type                          = "ingress"
+      source_cluster_security_group = true
+    }
+  }
+
+  node_security_group_tags = {
+    # NOTE - if creating multiple security groups with this module, only tag the
+    # security group that Karpenter should utilize with the following tag
+    # (i.e. - at most, only one security group should have this tag in your account)
+    "karpenter.sh/discovery/${local.name}" = local.name
+  }
 
   # We only need one node to get Karpenter up and running. This ensures core
   # services such as VPC CNI, CoreDNS, etc. are up and running so that Karpetner
@@ -21,9 +35,8 @@ module "eks" {
   eks_managed_node_groups = {
     initial = {
       instance_types = ["t3.medium"]
-      # For this example, we will only use the EKS created primary security group
-      create_security_group                 = false
-      attach_cluster_primary_security_group = true
+      # Not required nor used - avoid tagging two security groups with same tag as well
+      create_security_group = false
 
       min_size     = 1
       max_size     = 1
@@ -37,9 +50,7 @@ module "eks" {
   }
 
   tags = merge(module.tags.tags, {
-    # NOTE - if creating multiple security groups with this module, only tag the
-    # security group that Karpenter should utilize with the following tag
-    # (i.e. - at most, only one security group should have this tag in your account)
-    "karpenter.sh/discovery" = local.name
+    # This will tag the launch template created for use by Karpenter
+    "karpenter.sh/discovery/${local.name}" = local.name
   })
 }

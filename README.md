@@ -29,7 +29,7 @@ The configurations provided are not intended to be consumed as a Terraform modul
 
 - TODO
 
-### 🚧 [Serverless](https://github.com/clowdhaus/eks-reference-architecture/tree/main/serverless)
+### ✅ [Serverless](https://github.com/clowdhaus/eks-reference-architecture/tree/main/serverless)
 
 - TODO
 

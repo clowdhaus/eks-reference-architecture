@@ -1,6 +1,6 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 18.7"
+  version = "~> 18.21"
 
   cluster_name              = local.name
   cluster_version           = local.cluster_version
@@ -84,7 +84,7 @@ module "eks" {
 
 module "vpc_cni_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 4.12"
+  version = "~> 5.0"
 
   role_name_prefix      = "VPC-CNI-IRSA-"
   attach_vpc_cni_policy = true

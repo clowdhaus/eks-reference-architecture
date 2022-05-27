@@ -16,7 +16,7 @@ data "aws_iam_roles" "sso_admin" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 18.20"
+  version = "~> 18.21"
 
   cluster_name    = local.name
   cluster_version = "1.22"

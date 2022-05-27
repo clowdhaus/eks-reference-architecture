@@ -4,11 +4,12 @@
 
 module "karpenter_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 4.24"
+  version = "~> 5.0"
 
   role_name                          = "karpenter-controller-${local.name}"
   attach_karpenter_controller_policy = true
 
+  karpenter_tag_key               = "karpenter.sh/discovery/${local.name}"
   karpenter_controller_cluster_id = module.eks.cluster_id
   karpenter_controller_node_iam_role_arns = [
     module.eks.eks_managed_node_groups["initial"].iam_role_arn
@@ -41,7 +42,7 @@ resource "helm_release" "karpenter" {
   repository = "https://charts.karpenter.sh"
   chart      = "karpenter"
   # Be sure to pull latest version of chart
-  version = "0.9.1"
+  version = "0.10.1"
 
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
@@ -85,11 +86,11 @@ resource "kubectl_manifest" "karpenter_provisioner" {
         cpu: 1000
     provider:
       subnetSelector:
-        karpenter.sh/discovery: ${local.name}
+        Name: "*private*"
       securityGroupSelector:
-        karpenter.sh/discovery: ${local.name}
+        karpenter.sh/discovery/${module.eks.cluster_id}: ${module.eks.cluster_id}
       tags:
-        karpenter.sh/discovery: ${local.name}
+        karpenter.sh/discovery/${module.eks.cluster_id}: ${module.eks.cluster_id}
     ttlSecondsAfterEmpty: 30
   YAML
 

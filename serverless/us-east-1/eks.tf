@@ -133,7 +133,7 @@ resource "helm_release" "coredns" {
   create_namespace = false
   description      = "CoreDNS is a DNS server that chains plugins and provides Kubernetes DNS Services"
   chart            = "coredns"
-  version          = "1.19.3"
+  version          = "1.19.4"
   repository       = "https://coredns.github.io/helm"
   force_update     = true
   recreate_pods    = true

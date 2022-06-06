@@ -1,6 +1,6 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 18.21"
+  version = "~> 18.23"
 
   cluster_name    = local.name
   cluster_version = "1.22"
@@ -17,6 +17,14 @@ module "eks" {
       protocol                      = "tcp"
       from_port                     = 8443
       to_port                       = 8443
+      type                          = "ingress"
+      source_cluster_security_group = true
+    }
+    ingress_nodes_karpenter_port = {
+      description                   = "Cluster API to Node group for ALB controller webhook"
+      protocol                      = "tcp"
+      from_port                     = 9443
+      to_port                       = 9443
       type                          = "ingress"
       source_cluster_security_group = true
     }

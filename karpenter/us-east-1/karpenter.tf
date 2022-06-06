@@ -1,10 +1,10 @@
 ################################################################################
-# Karpenter IAM role for Service Accounts
+# Karpenter - IAM role for Service Accounts
 ################################################################################
 
 module "karpenter_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.0"
+  version = "~> 5.1"
 
   role_name                          = "karpenter-controller-${local.name}"
   attach_karpenter_controller_policy = true
@@ -24,7 +24,7 @@ module "karpenter_irsa" {
 }
 
 ################################################################################
-# Karpenter Helm Chart
+# Karpenter - Helm Chart
 ################################################################################
 
 resource "aws_iam_instance_profile" "karpenter" {

@@ -42,7 +42,7 @@ resource "helm_release" "karpenter" {
   repository = "https://charts.karpenter.sh"
   chart      = "karpenter"
   # Be sure to pull latest version of chart
-  version = "0.10.1"
+  version = "0.11.1"
 
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"

@@ -6,12 +6,16 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 4.0"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.10"
+    }
   }
 
   backend "s3" {
     # Update the remote backend below to support your environment
     bucket         = "clowd-haus-iac-us-east-1"
-    key            = "eks-reference-architecture/eks-managed-node-group/us-east-1/terraform.tfstate"
+    key            = "eks-reference-architecture/self-managed-node-group/us-east-1/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "clowd-haus-terraform-state"
     encrypt        = true
@@ -27,12 +31,24 @@ provider "aws" {
   # }
 }
 
+provider "kubernetes" {
+  host                   = module.eks_default.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks_default.cluster_certificate_authority_data)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    # This requires the awscli to be installed locally where Terraform is executed
+    args = ["eks", "get-token", "--cluster-name", module.eks_default.cluster_id]
+  }
+}
+
 ################################################################################
 # Common Locals
 ################################################################################
 
 locals {
-  name        = "eks-ref-arch-eks-mng"
+  name        = "eks-ref-arch-self-mng"
   region      = "us-east-1"
   environment = "nonprod"
 

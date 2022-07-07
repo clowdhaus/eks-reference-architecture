@@ -1,9 +1,13 @@
-module "eks_bottlerocket" {
+locals {
+  cluster_version = "1.22"
+}
+
+module "eks_default" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 18.26"
 
-  cluster_name    = "${local.name}-br"
-  cluster_version = "1.22"
+  cluster_name    = "${local.name}-default"
+  cluster_version = local.cluster_version
 
   # EKS Addons
   cluster_addons = {
@@ -25,24 +29,22 @@ module "eks_bottlerocket" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
-  eks_managed_node_groups = {
-    bottlerocket = {
-      ami_type = "BOTTLEROCKET_x86_64"
-      platform = "bottlerocket"
+  # Self managed node groups will not automatically create the aws-auth configmap so we need to
+  create_aws_auth_configmap = true
+  manage_aws_auth_configmap = true
 
-      instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-      capacity_type  = "SPOT"
-
+  self_managed_node_groups = {
+    default = {
       # Is deprecated and will be removed in v19.x
       create_security_group = false
+
+      instance_type = "m5.large"
+
+      bootstrap_extra_args = "--kubelet-extra-args '--node-labels=lifecycle=${local.cluster_version}'"
 
       min_size     = 1
       max_size     = 3
       desired_size = 1
-
-      update_config = {
-        max_unavailable_percentage = 33
-      }
     }
   }
 

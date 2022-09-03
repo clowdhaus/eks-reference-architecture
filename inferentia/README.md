@@ -12,7 +12,7 @@ See more details [here](https://awsdocs-neuron.readthedocs-hosted.com/en/v1.19.0
 
 1. Terraform version 1.0 or later
 2. awscli 2.x
-3. kubectl 1.17 or later
+3. kubectl 1.20 or later
 
 ### Deployment
 

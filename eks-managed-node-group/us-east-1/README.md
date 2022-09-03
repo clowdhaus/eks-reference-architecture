@@ -16,11 +16,11 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_eks_al2"></a> [eks\_al2](#module\_eks\_al2) | terraform-aws-modules/eks/aws | ~> 18.26 |
-| <a name="module_eks_bottlerocket"></a> [eks\_bottlerocket](#module\_eks\_bottlerocket) | terraform-aws-modules/eks/aws | ~> 18.26 |
-| <a name="module_eks_default"></a> [eks\_default](#module\_eks\_default) | terraform-aws-modules/eks/aws | ~> 18.26 |
+| <a name="module_eks_al2"></a> [eks\_al2](#module\_eks\_al2) | terraform-aws-modules/eks/aws | ~> 18.29 |
+| <a name="module_eks_bottlerocket"></a> [eks\_bottlerocket](#module\_eks\_bottlerocket) | terraform-aws-modules/eks/aws | ~> 18.29 |
+| <a name="module_eks_default"></a> [eks\_default](#module\_eks\_default) | terraform-aws-modules/eks/aws | ~> 18.29 |
 | <a name="module_tags"></a> [tags](#module\_tags) | git@github.com:clowdhaus/terraform-tags.git | n/a |
-| <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-aws-modules/vpc/aws | ~> 3.12 |
+| <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-aws-modules/vpc/aws | ~> 3.14 |
 
 ## Resources
 

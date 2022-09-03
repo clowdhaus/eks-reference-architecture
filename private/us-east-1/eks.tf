@@ -1,9 +1,9 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 18.24"
+  version = "~> 18.29"
 
   cluster_name              = local.name
-  cluster_version           = local.cluster_version
+  cluster_version           = "1.23"
   cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   # Private network access only
@@ -52,12 +52,12 @@ module "eks" {
       platform = "bottlerocket"
 
       bootstrap_extra_args = <<-EOT
-      # extra args added
-      [settings.kernel]
-      lockdown = "integrity"
+        # extra args added
+        [settings.kernel]
+        lockdown = "integrity"
 
-      [settings.ntp]
-      time-servers = ["169.254.169.123"]
+        [settings.ntp]
+        time-servers = ["169.254.169.123"]
       EOT
 
       block_device_mappings = {
@@ -84,7 +84,7 @@ module "eks" {
 
 module "vpc_cni_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.0"
+  version = "~> 5.3"
 
   role_name_prefix      = "VPC-CNI-IRSA-"
   attach_vpc_cni_policy = true

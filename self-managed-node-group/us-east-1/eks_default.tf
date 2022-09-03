@@ -1,10 +1,10 @@
 locals {
-  cluster_version = "1.22"
+  cluster_version = "1.23"
 }
 
 module "eks_default" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 18.26"
+  version = "~> 18.29"
 
   cluster_name    = "${local.name}-default"
   cluster_version = local.cluster_version

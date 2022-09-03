@@ -38,8 +38,6 @@ locals {
   account_id = data.aws_caller_identity.current.account_id
   partition  = data.aws_partition.current.partition
   dns_suffix = data.aws_partition.current.dns_suffix
-
-  cluster_version = "1.21"
 }
 
 ################################################################################

@@ -1,7 +1,7 @@
 module "vpc" {
   # https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.12"
+  version = "~> 3.14"
 
   name = local.name
   cidr = "10.0.0.0/16"
@@ -22,17 +22,11 @@ module "vpc" {
   default_security_group_tags   = { Name = "${local.name}-default" }
 
   public_subnet_tags = {
-    "kubernetes.io/cluster/${local.name}-al2"          = "shared"
-    "kubernetes.io/cluster/${local.name}-bottlerocket" = "shared"
-    "kubernetes.io/cluster/${local.name}-default"      = "shared"
-    "kubernetes.io/role/elb"                           = 1
+    "kubernetes.io/role/elb" = 1
   }
 
   private_subnet_tags = {
-    "kubernetes.io/cluster/${local.name}-al2"          = "shared"
-    "kubernetes.io/cluster/${local.name}-bottlerocket" = "shared"
-    "kubernetes.io/cluster/${local.name}-default"      = "shared"
-    "kubernetes.io/role/internal-elb"                  = 1
+    "kubernetes.io/role/internal-elb" = 1
   }
 
   tags = module.tags.tags

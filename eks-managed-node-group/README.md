@@ -12,7 +12,7 @@ If there are features that you think are missing, please feel free to open up a 
 
 1. Terraform version 1.0 or later
 2. awscli 2.7 or later
-3. kubectl 1.17 or later
+3. kubectl 1.20 or later
 
 ### Deployment
 

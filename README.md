@@ -7,9 +7,8 @@ The configurations provided are not intended to be consumed as a Terraform modul
 - ✅ [Inferentia](https://github.com/clowdhaus/eks-reference-architecture/tree/main/inferentia)
 - [ ] [IPv6](https://github.com/clowdhaus/eks-reference-architecture/tree/main/ipv6)
 - ✅ [Karpenter](https://github.com/clowdhaus/eks-reference-architecture/tree/main/karpenter)
-- [ ]] [Multi-Region](https://github.com/clowdhaus/eks-reference-architecture/tree/main/multi-region)
+- [ ] [Multi-Region](https://github.com/clowdhaus/eks-reference-architecture/tree/main/multi-region)
 - 🏗️ [Private](https://github.com/clowdhaus/eks-reference-architecture/tree/main/private)
-- [ ] [Restricted Public Endpoint](https://github.com/clowdhaus/eks-reference-architecture/tree/main/restricted-public-endpoint)
 - ✅ [Serverless](https://github.com/clowdhaus/eks-reference-architecture/tree/main/serverless)
 - [ ] [Windows](https://github.com/clowdhaus/eks-reference-architecture/tree/main/windows)
 

@@ -11,7 +11,7 @@ terraform {
   backend "s3" {
     # Update the remote backend below to support your environment
     bucket         = "clowd-haus-iac-us-east-1"
-    key            = "eks-reference-architecture/ipv4-prefix-delegation/us-east-1/terraform.tfstate"
+    key            = "eks-reference-architecture/ipvs/us-east-1/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "clowd-haus-terraform-state"
     encrypt        = true
@@ -32,7 +32,7 @@ provider "aws" {
 ################################################################################
 
 locals {
-  name        = "ipv4-prefix-delegation"
+  name        = "ipvs"
   region      = "us-east-1"
   environment = "nonprod"
 

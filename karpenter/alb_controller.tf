@@ -15,6 +15,8 @@ module "alb_controller_irsa" {
       namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
     }
   }
+
+  tags = module.tags.tags
 }
 
 ################################################################################

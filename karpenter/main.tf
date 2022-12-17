@@ -8,11 +8,15 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 2.4"
+      version = "~> 2.6"
     }
     kubectl = {
       source  = "gavinbunney/kubectl"
       version = "~> 1.14"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.16"
     }
   }
 
@@ -33,6 +37,18 @@ provider "aws" {
   #   role_arn     = "<TODO>"
   #   session_name = local.name
   # }
+}
+
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    # This requires the awscli to be installed locally where Terraform is executed
+    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+  }
 }
 
 provider "helm" {
@@ -68,7 +84,7 @@ provider "kubectl" {
 ################################################################################
 
 locals {
-  name        = "eks-ref-arch-karpenter"
+  name        = "karpenter"
   region      = "us-east-1"
   environment = "nonprod"
 
@@ -81,6 +97,7 @@ locals {
 ################################################################################
 
 data "aws_availability_zones" "available" {}
+data "aws_ecrpublic_authorization_token" "token" {}
 
 ################################################################################
 # Common Modules

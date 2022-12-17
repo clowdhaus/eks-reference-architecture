@@ -1,67 +1,55 @@
 ################################################################################
-# Karpenter - IAM role for Service Accounts
+# Karpenter - IRSA, SQS Queue, Eventbridge Rules
 ################################################################################
 
-module "karpenter_irsa" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.9"
+module "karpenter" {
+  source  = "terraform-aws-modules/eks/aws//modules/karpenter"
+  version = "~> 19.1"
 
-  role_name                          = "karpenter-controller-${local.name}"
-  attach_karpenter_controller_policy = true
+  cluster_name           = module.eks.cluster_name
+  irsa_oidc_provider_arn = module.eks.oidc_provider_arn
 
-  karpenter_tag_key               = "karpenter.sh/discovery/${local.name}"
-  karpenter_controller_cluster_id = module.eks.cluster_name
-  karpenter_controller_node_iam_role_arns = [
-    module.eks.eks_managed_node_groups["initial"].iam_role_arn
-  ]
-
-  oidc_providers = {
-    ex = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["karpenter:karpenter"]
-    }
-  }
+  tags = module.tags.tags
 }
 
 ################################################################################
 # Karpenter - Helm Chart
 ################################################################################
 
-resource "aws_iam_instance_profile" "karpenter" {
-  name = "KarpenterNodeInstanceProfile-${local.name}"
-  role = module.eks.eks_managed_node_groups["initial"].iam_role_name
-
-  tags = module.tags.tags
-}
-
 resource "helm_release" "karpenter" {
   namespace        = "karpenter"
   create_namespace = true
 
-  name       = "karpenter"
-  repository = "https://charts.karpenter.sh"
-  chart      = "karpenter"
-  # Be sure to pull latest version of chart
-  version = "0.16.1"
+  name                = "karpenter"
+  repository          = "oci://public.ecr.aws/karpenter"
+  repository_username = data.aws_ecrpublic_authorization_token.token.user_name
+  repository_password = data.aws_ecrpublic_authorization_token.token.password
+  chart               = "karpenter"
+  version             = "v0.20.0"
 
   set {
-    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.karpenter_irsa.iam_role_arn
-  }
-
-  set {
-    name  = "clusterName"
+    name  = "settings.aws.clusterName"
     value = module.eks.cluster_name
   }
 
   set {
-    name  = "clusterEndpoint"
+    name  = "settings.aws.clusterEndpoint"
     value = module.eks.cluster_endpoint
   }
 
   set {
-    name  = "aws.defaultInstanceProfile"
-    value = aws_iam_instance_profile.karpenter.name
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.karpenter.irsa_arn
+  }
+
+  set {
+    name  = "settings.aws.defaultInstanceProfile"
+    value = module.karpenter.instance_profile_name
+  }
+
+  set {
+    name  = "settings.aws.interruptionQueueName"
+    value = module.karpenter.queue_name
   }
 }
 
@@ -69,29 +57,43 @@ resource "helm_release" "karpenter" {
 # Karpenter Provisioner
 ################################################################################
 
-# Workaround - https://github.com/hashicorp/terraform-provider-kubernetes/issues/1380#issuecomment-967022975
 resource "kubectl_manifest" "karpenter_provisioner" {
   yaml_body = <<-YAML
-  apiVersion: karpenter.sh/v1alpha5
-  kind: Provisioner
-  metadata:
-    name: default
-  spec:
-    requirements:
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: ["spot"]
-    limits:
-      resources:
-        cpu: 1000
-    provider:
+    apiVersion: karpenter.sh/v1alpha5
+    kind: Provisioner
+    metadata:
+      name: default
+    spec:
+      requirements:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot"]
+      limits:
+        resources:
+          cpu: 1000
+      providerRef:
+        name: default
+      ttlSecondsAfterEmpty: 30
+  YAML
+
+  depends_on = [
+    helm_release.karpenter
+  ]
+}
+
+resource "kubectl_manifest" "karpenter_node_template" {
+  yaml_body = <<-YAML
+    apiVersion: karpenter.k8s.aws/v1alpha1
+    kind: AWSNodeTemplate
+    metadata:
+      name: default
+    spec:
       subnetSelector:
-        Name: "*private*"
+        karpenter.sh/discovery: ${module.eks.cluster_name}
       securityGroupSelector:
-        karpenter.sh/discovery/${module.eks.cluster_name}: ${module.eks.cluster_name}
+        karpenter.sh/discovery: ${module.eks.cluster_name}
       tags:
-        karpenter.sh/discovery/${module.eks.cluster_name}: ${module.eks.cluster_name}
-    ttlSecondsAfterEmpty: 30
+        karpenter.sh/discovery: ${module.eks.cluster_name}
   YAML
 
   depends_on = [
@@ -103,27 +105,27 @@ resource "kubectl_manifest" "karpenter_provisioner" {
 # and starts with zero replicas
 resource "kubectl_manifest" "karpenter_example_deployment" {
   yaml_body = <<-YAML
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: inflate
-  spec:
-    replicas: 0
-    selector:
-      matchLabels:
-        app: inflate
-    template:
-      metadata:
-        labels:
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: inflate
+    spec:
+      replicas: 0
+      selector:
+        matchLabels:
           app: inflate
-      spec:
-        terminationGracePeriodSeconds: 0
-        containers:
-          - name: inflate
-            image: public.ecr.aws/eks-distro/kubernetes/pause:3.2
-            resources:
-              requests:
-                cpu: 1
+      template:
+        metadata:
+          labels:
+            app: inflate
+        spec:
+          terminationGracePeriodSeconds: 0
+          containers:
+            - name: inflate
+              image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
+              resources:
+                requests:
+                  cpu: 1
   YAML
 
   depends_on = [

@@ -4,15 +4,15 @@
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.14"
+  version = "~> 3.18"
 
   name = local.name
-  cidr = "10.0.0.0/16"
+  cidr = local.vpc_cidr
 
-  azs              = ["${local.region}a", "${local.region}b", "${local.region}c"]
-  private_subnets  = ["10.0.0.0/18", "10.0.64.0/18", "10.0.128.0/18"]
-  public_subnets   = ["10.0.192.0/24", "10.0.193.0/24", "10.0.194.0/24"]
-  database_subnets = ["10.0.195.0/24", "10.0.196.0/24", "10.0.197.0/24"]
+  azs             = local.azs
+  private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 4, k)]
+  public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 48)]
+  intra_subnets   = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 52)]
 
   enable_dns_hostnames = true
   enable_dns_support   = true

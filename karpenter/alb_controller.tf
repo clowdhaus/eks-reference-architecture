@@ -4,7 +4,7 @@
 
 module "alb_controller_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.3"
+  version = "~> 5.9"
 
   role_name                              = "alb-controller-${local.name}"
   attach_load_balancer_controller_policy = true
@@ -27,7 +27,7 @@ resource "helm_release" "alb_controller" {
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
-  version    = "1.4.4"
+  version    = "1.4.6"
 
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"

@@ -1,26 +1,16 @@
 module "eks_al2" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 18.29"
+  version = "~> 19.1"
 
   cluster_name    = "${local.name}-al2"
-  cluster_version = "1.23"
+  cluster_version = "1.24"
 
   # EKS Addons
   cluster_addons = {
-    coredns = {
-      resolve_conflicts = "OVERWRITE"
-    }
+    coredns    = {}
     kube-proxy = {}
-    vpc-cni = {
-      resolve_conflicts = "OVERWRITE"
-    }
+    vpc-cni    = {}
   }
-
-  # Encryption key
-  create_kms_key = true
-  cluster_encryption_config = [{
-    resources = ["secrets"]
-  }]
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
@@ -42,16 +32,9 @@ module "eks_al2" {
         }
       }
 
-      # Is deprecated and will be removed in v19.x
-      create_security_group = false
-
       min_size     = 1
       max_size     = 3
       desired_size = 1
-
-      update_config = {
-        max_unavailable_percentage = 33
-      }
     }
   }
 

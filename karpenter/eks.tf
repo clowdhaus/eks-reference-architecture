@@ -1,34 +1,17 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 18.29"
+  version = "~> 19.1"
 
   cluster_name    = local.name
-  cluster_version = "1.23"
+  cluster_version = "1.24"
+
+  cluster_endpoint_public_access = true
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
   # Required for Karpenter role
   enable_irsa = true
-
-  node_security_group_additional_rules = {
-    ingress_nodes_karpenter_port = {
-      description                   = "Cluster API to Node group for Karpenter webhook"
-      protocol                      = "tcp"
-      from_port                     = 8443
-      to_port                       = 8443
-      type                          = "ingress"
-      source_cluster_security_group = true
-    }
-    ingress_nodes_karpenter_port = {
-      description                   = "Cluster API to Node group for ALB controller webhook"
-      protocol                      = "tcp"
-      from_port                     = 9443
-      to_port                       = 9443
-      type                          = "ingress"
-      source_cluster_security_group = true
-    }
-  }
 
   node_security_group_tags = {
     # NOTE - if creating multiple security groups with this module, only tag the
@@ -49,11 +32,6 @@ module "eks" {
       min_size     = 1
       max_size     = 1
       desired_size = 1
-
-      iam_role_additional_policies = [
-        # Required by Karpenter
-        "arn:${local.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
-      ]
     }
   }
 

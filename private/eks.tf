@@ -1,31 +1,18 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 18.29"
+  version = "~> 19.1"
 
   cluster_name              = local.name
-  cluster_version           = "1.23"
+  cluster_version           = "1.24"
   cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-  # Private network access only
-  cluster_endpoint_private_access      = true
-  cluster_endpoint_public_access       = false
-  cluster_endpoint_public_access_cidrs = []
-
   cluster_addons = {
-    coredns = {
-      resolve_conflicts = "OVERWRITE"
-    }
+    coredns    = {}
     kube-proxy = {}
     vpc-cni = {
-      resolve_conflicts        = "OVERWRITE"
       service_account_role_arn = module.vpc_cni_irsa.iam_role_arn
     }
   }
-
-  cluster_encryption_config = [{
-    provider_key_arn = aws_kms_key.eks_secrets.arn
-    resources        = ["secrets"]
-  }]
 
   vpc_id      = module.vpc.vpc_id
   subnet_ids  = module.vpc.private_subnets
@@ -40,10 +27,6 @@ module "eks" {
     # This is ONLY required for creating a new cluster and can be disabled once the
     # cluster is up and running since the IRSA will be used at that point
     iam_role_attach_cni_policy = false
-
-    # Since we do not need any additional/separate access for the node group(s)
-    # we can disable the creation of the placeholder security group
-    create_security_group = false
   }
 
   eks_managed_node_groups = {
@@ -84,7 +67,7 @@ module "eks" {
 
 module "vpc_cni_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.3"
+  version = "~> 5.9"
 
   role_name_prefix      = "VPC-CNI-IRSA-"
   attach_vpc_cni_policy = true

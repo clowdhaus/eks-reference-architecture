@@ -16,10 +16,12 @@ data "aws_iam_roles" "sso_admin" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 18.29"
+  version = "~> 19.1"
 
   cluster_name    = local.name
-  cluster_version = "1.23"
+  cluster_version = "1.24"
+
+  cluster_endpoint_public_access = true
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
@@ -45,8 +47,6 @@ module "eks" {
       min_size     = 1
       max_size     = 1
       desired_size = 1
-
-      create_security_group = false
     }
   }
 
@@ -183,7 +183,7 @@ resource "kubernetes_daemon_set_v1" "neuron_device" {
 
         container {
           # https://gallery.ecr.aws/neuron/neuron-device-plugin
-          image             = "public.ecr.aws/neuron/neuron-device-plugin:1.9.0.0"
+          image             = "public.ecr.aws/neuron/neuron-device-plugin:2.1.12.0"
           name              = local.plugin_name
           image_pull_policy = "Always"
 

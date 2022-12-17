@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0"
+      version = "~> 4.47"
     }
   }
 
@@ -31,7 +31,7 @@ provider "aws" {
 ################################################################################
 
 locals {
-  # name        = "multi-region"
+  name        = "multi-region"
   region      = "us-east-1"
   environment = "nonprod"
 }
@@ -40,17 +40,17 @@ locals {
 # Common Data
 ################################################################################
 
-# tflint-ignore: terraform_unused_declarations
-data "aws_caller_identity" "current" {}
+# data "aws_availability_zones" "available" {}
 
 ################################################################################
 # Common Modules
 ################################################################################
 
 module "tags" {
-  # tflint-ignore: terraform_module_pinned_source
-  source = "git@github.com:clowdhaus/terraform-tags.git"
+  source  = "clowdhaus/tags/aws"
+  version = "~> 1.0"
 
+  application = local.name
   environment = local.environment
   repository  = "https://github.com/clowdhaus/eks-reference-architecture"
 }

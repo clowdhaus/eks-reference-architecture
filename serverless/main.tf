@@ -4,11 +4,11 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0"
+      version = "~> 4.47"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = ">= 2.10"
+      version = ">= 2.16"
     }
     helm = {
       source  = "hashicorp/helm"
@@ -73,15 +73,24 @@ locals {
   name        = "eks-ref-arch-serverless"
   region      = "us-east-1"
   environment = "nonprod"
+
+  vpc_cidr = "10.0.0.0/16"
+  azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 }
+
+################################################################################
+# Common Data
+################################################################################
+
+data "aws_availability_zones" "available" {}
 
 ################################################################################
 # Common Modules
 ################################################################################
 
 module "tags" {
-  # tflint-ignore: terraform_module_pinned_source
-  source = "git@github.com:clowdhaus/terraform-tags.git"
+  source  = "clowdhaus/tags/aws"
+  version = "~> 1.0"
 
   application = local.name
   environment = local.environment

@@ -36,7 +36,7 @@ resource "helm_release" "alb_controller" {
 
   set {
     name  = "clusterName"
-    value = module.eks.cluster_id
+    value = module.eks.cluster_name
   }
 
   set {

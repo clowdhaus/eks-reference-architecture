@@ -10,7 +10,7 @@ module "karpenter_irsa" {
   attach_karpenter_controller_policy = true
 
   karpenter_tag_key               = "karpenter.sh/discovery/${local.name}"
-  karpenter_controller_cluster_id = module.eks.cluster_id
+  karpenter_controller_cluster_id = module.eks.cluster_name
   karpenter_controller_node_iam_role_arns = [
     module.eks.eks_managed_node_groups["initial"].iam_role_arn
   ]
@@ -51,7 +51,7 @@ resource "helm_release" "karpenter" {
 
   set {
     name  = "clusterName"
-    value = module.eks.cluster_id
+    value = module.eks.cluster_name
   }
 
   set {
@@ -88,9 +88,9 @@ resource "kubectl_manifest" "karpenter_provisioner" {
       subnetSelector:
         Name: "*private*"
       securityGroupSelector:
-        karpenter.sh/discovery/${module.eks.cluster_id}: ${module.eks.cluster_id}
+        karpenter.sh/discovery/${module.eks.cluster_name}: ${module.eks.cluster_name}
       tags:
-        karpenter.sh/discovery/${module.eks.cluster_id}: ${module.eks.cluster_id}
+        karpenter.sh/discovery/${module.eks.cluster_name}: ${module.eks.cluster_name}
     ttlSecondsAfterEmpty: 30
   YAML
 

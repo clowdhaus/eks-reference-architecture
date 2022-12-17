@@ -36,7 +36,7 @@ provider "aws" {
 ################################################################################
 
 locals {
-  name        = "eks-ref-arch-ipv4-prefix-delegation"
+  name        = "ipv4-prefix-delegation"
   region      = "us-east-1"
   environment = "nonprod"
 

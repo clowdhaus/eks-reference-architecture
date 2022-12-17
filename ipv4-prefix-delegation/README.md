@@ -32,7 +32,7 @@ The following command will update the `kubeconfig` on your local machine and all
 1. Run `update-kubeconfig` command:
 
 ```sh
-aws eks --region <REGION> update-kubeconfig --name <CLUSTER_NAME>
+aws eks --region us-east-1 update-kubeconfig --name ipv4-prefix-delegation
 ```
 
 2. List the nodes running currently
@@ -40,17 +40,17 @@ aws eks --region <REGION> update-kubeconfig --name <CLUSTER_NAME>
 ```sh
 kubectl get nodes
 
-# Output should look like below
-NAME                                        STATUS                        ROLES    AGE     VERSION
-ip-10-0-30-125.us-west-2.compute.internal   Ready                         <none>   2m19s   v1.22.9-eks-810597c
+# Output should look similar to below
+NAME                         STATUS   ROLES    AGE     VERSION
+ip-10-0-47-78.ec2.internal   Ready    <none>   7m12s   v1.24.7-eks-fb459a0
 ```
 
 3. Inspect the nodes settings and check for the max allocatable pods - should be 110 in this scenario with m5.xlarge:
 
 ```sh
-kubectl describe node ip-10-0-30-125.us-west-2.compute.internal
+kubectl describe node ip-10-0-47-78.ec2.internal
 
-# Output should look like below (truncated for brevity)
+# Output should look similar to below (truncated for brevity)
   Capacity:
     attachable-volumes-aws-ebs:  25
     cpu:                         4
@@ -58,7 +58,7 @@ kubectl describe node ip-10-0-30-125.us-west-2.compute.internal
     hugepages-1Gi:               0
     hugepages-2Mi:               0
     memory:                      15919124Ki
-    pods:                        110 # <- this should be 110 and not 58
+    pods:                        110 # <- this should be 110
   Allocatable:
     attachable-volumes-aws-ebs:  25
     cpu:                         3920m
@@ -66,7 +66,7 @@ kubectl describe node ip-10-0-30-125.us-west-2.compute.internal
     hugepages-1Gi:               0
     hugepages-2Mi:               0
     memory:                      14902292Ki
-    pods:                        110 # <- this should be 110 and not 58
+    pods:                        110 # <- this should be 110
 ```
 
 4. List out the pods running currently:

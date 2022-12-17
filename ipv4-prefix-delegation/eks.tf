@@ -5,17 +5,22 @@ module "eks" {
   cluster_name    = local.name
   cluster_version = "1.24"
 
+  cluster_endpoint_public_access = true
+
   # EKS Addons
   cluster_addons = {
     coredns    = {}
     kube-proxy = {}
-    configuration_values = jsonencode({
-      env = {
-        # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
-        ENABLE_PREFIX_DELEGATION = true
-        WARM_PREFIX_TARGET       = 1
-      }
-    })
+    vpc-cni = {
+      most_recent = true
+      configuration_values = jsonencode({
+        env = {
+          # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
+          ENABLE_PREFIX_DELEGATION = "true"
+          WARM_PREFIX_TARGET       = "1"
+        }
+      })
+    }
   }
 
   vpc_id     = module.vpc.vpc_id
@@ -35,9 +40,10 @@ module "eks" {
         set -ex
 
         cat <<-EOF > /etc/profile.d/bootstrap.sh
-        export USE_MAX_PODS=false
-        export KUBELET_EXTRA_ARGS="--max-pods=110"
+          export USE_MAX_PODS=false
+          export KUBELET_EXTRA_ARGS="--max-pods=110"
         EOF
+
         # Source extra environment variables in bootstrap script
         sed -i '/^set -o errexit/a\\nsource /etc/profile.d/bootstrap.sh' /etc/eks/bootstrap.sh
       EOT

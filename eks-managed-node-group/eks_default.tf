@@ -1,6 +1,6 @@
 module "eks_default" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.1"
+  version = "~> 19.5"
 
   cluster_name    = "${local.name}-default"
   cluster_version = "1.24"

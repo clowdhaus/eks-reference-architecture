@@ -4,7 +4,7 @@
 
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "~> 19.1"
+  version = "~> 19.5"
 
   cluster_name           = module.eks.cluster_name
   irsa_oidc_provider_arn = module.eks.oidc_provider_arn
@@ -25,32 +25,31 @@ resource "helm_release" "karpenter" {
   repository_username = data.aws_ecrpublic_authorization_token.token.user_name
   repository_password = data.aws_ecrpublic_authorization_token.token.password
   chart               = "karpenter"
-  version             = "v0.20.0"
+  version             = "v0.22.0"
 
-  set {
-    name  = "settings.aws.clusterName"
-    value = module.eks.cluster_name
-  }
-
-  set {
-    name  = "settings.aws.clusterEndpoint"
-    value = module.eks.cluster_endpoint
-  }
-
-  set {
-    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.karpenter.irsa_arn
-  }
-
-  set {
-    name  = "settings.aws.defaultInstanceProfile"
-    value = module.karpenter.instance_profile_name
-  }
-
-  set {
-    name  = "settings.aws.interruptionQueueName"
-    value = module.karpenter.queue_name
-  }
+  # Memory request/limit set to maximize the capacity provisioned by Fargate
+  # 2G allocated - 256Mb overhead = 1792Mb
+  values = [
+    <<-EOT
+      controller:
+        resources:
+          requests:
+            memory: "1792M"
+          limits:
+            memory: "1792M"
+      nodeSelector:
+        eks.amazonaws.com/compute-type: fargate
+      settings:
+        aws:
+          clusterName: ${module.eks.cluster_name}
+          clusterEndpoint: ${module.eks.cluster_endpoint}
+          defaultInstanceProfile: ${module.karpenter.instance_profile_name}
+          interruptionQueueName: ${module.karpenter.queue_name}
+      serviceAccount:
+        annotations:
+          eks.amazonaws.com/role-arn: ${module.karpenter.irsa_arn}
+    EOT
+  ]
 }
 
 ################################################################################

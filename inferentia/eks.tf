@@ -183,7 +183,7 @@ resource "kubernetes_daemon_set_v1" "neuron_device" {
 
         container {
           # https://gallery.ecr.aws/neuron/neuron-device-plugin
-          image             = "public.ecr.aws/neuron/neuron-device-plugin:2.1.31.0"
+          image             = "public.ecr.aws/neuron/neuron-device-plugin:2.12.5.0"
           name              = local.plugin_name
           image_pull_policy = "Always"
 

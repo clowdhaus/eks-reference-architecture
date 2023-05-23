@@ -2,7 +2,7 @@
 
 This example shows how to provision an EKS cluster with Windows OS based nodes.
 
-## Prerequisites:
+### Prerequisites:
 
 Ensure that you have the following tools installed locally:
 

@@ -1,9 +1,9 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.5"
+  version = "~> 19.14"
 
   cluster_name    = local.name
-  cluster_version = "1.24"
+  cluster_version = "1.26"
 
   cluster_endpoint_public_access = true
 
@@ -58,26 +58,19 @@ module "eks" {
     },
   ]
 
-  fargate_profiles = merge(
-    { for i in range(3) :
-      "kube-system-${element(split("-", local.azs[i]), 2)}" => {
-        selectors = [
-          { namespace = "kube-system" }
-        ]
-        # We want to create a profile per AZ for high availability
-        subnet_ids = [element(module.vpc.private_subnets, i)]
-      }
-    },
-    { for i in range(3) :
-      "karpenter-${element(split("-", local.azs[i]), 2)}" => {
-        selectors = [
-          { namespace = "karpenter" }
-        ]
-        # We want to create a profile per AZ for high availability
-        subnet_ids = [element(module.vpc.private_subnets, i)]
-      }
-    },
-  )
+  fargate_profiles = {
+    karpenter = {
+      selectors = [
+        { namespace = "karpenter" }
+      ]
+    }
+    kube_system = {
+      name = "kube-system"
+      selectors = [
+        { namespace = "kube-system" }
+      ]
+    }
+  }
 
   tags = merge(module.tags.tags, {
     # NOTE - if creating multiple security groups with this module, only tag the

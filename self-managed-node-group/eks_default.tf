@@ -1,13 +1,9 @@
-locals {
-  cluster_version = "1.24"
-}
-
 module "eks_default" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.5"
+  version = "~> 19.14"
 
   cluster_name    = "${local.name}-default"
-  cluster_version = local.cluster_version
+  cluster_version = "1.26"
 
   cluster_endpoint_public_access = true
 
@@ -28,8 +24,6 @@ module "eks_default" {
   self_managed_node_groups = {
     default = {
       instance_type = "m5.large"
-
-      bootstrap_extra_args = "--kubelet-extra-args '--node-labels=lifecycle=${local.cluster_version}'"
 
       min_size     = 1
       max_size     = 3

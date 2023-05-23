@@ -1,9 +1,9 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.5"
+  version = "~> 19.14"
 
   cluster_name              = local.name
-  cluster_version           = "1.24"
+  cluster_version           = "1.26"
   cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   cluster_addons = {
@@ -50,7 +50,7 @@ module "eks" {
             volume_size           = 32
             volume_type           = "gp3"
             encrypted             = true
-            kms_key_id            = aws_kms_key.ebs.arn
+            kms_key_id            = module.ebs_kms.key_arn
             delete_on_termination = true
           }
         }
@@ -67,11 +67,11 @@ module "eks" {
 
 module "vpc_cni_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.9"
+  version = "~> 5.20"
 
   role_name_prefix      = "VPC-CNI-IRSA-"
   attach_vpc_cni_policy = true
-  vpc_cni_enable_ipv6   = true
+  vpc_cni_enable_ipv4   = true
 
   oidc_providers = {
     main = {
@@ -84,91 +84,21 @@ module "vpc_cni_irsa" {
 }
 
 ################################################################################
-# EKS Secrets Custom KMS Key
-################################################################################
-
-resource "aws_kms_key" "eks_secrets" {
-  description             = "EKS secrets encryption key"
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-  policy                  = data.aws_iam_policy_document.eks_secrets.json
-
-  tags = module.tags.tags
-}
-
-data "aws_iam_policy_document" "eks_secrets" {
-  statement {
-    sid       = "RootUserAdmin"
-    actions   = ["kms:*"]
-    resources = ["*"]
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:${local.partition}:iam::${local.account_id}:root"]
-    }
-  }
-}
-
-################################################################################
 # EBS Custom KMS Key
 ################################################################################
 
-resource "aws_kms_key" "ebs" {
-  description             = "EBS volume encryption key"
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-  policy                  = data.aws_iam_policy_document.ebs.json
+module "ebs_kms" {
+  source  = "terraform-aws-modules/kms/aws"
+  version = "~> 1.5"
+
+  description = "EBS volume encryption key"
+
+  # Policy
+  key_administrators                = [data.aws_caller_identity.current.arn]
+  key_service_roles_for_autoscaling = ["arn:${local.partition}:iam::${local.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"]
+
+  # Aliases
+  aliases = ["${local.name}/ebs"]
 
   tags = module.tags.tags
-}
-
-data "aws_iam_policy_document" "ebs" {
-  statement {
-    sid       = "RootUserAdmin"
-    actions   = ["kms:*"]
-    resources = ["*"]
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:${local.partition}:iam::${local.account_id}:root"]
-    }
-  }
-
-  statement {
-    sid = "EncryptDecrypt"
-    actions = [
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:ReEncrypt*",
-      "kms:GenerateDataKey*",
-      "kms:DescribeKey",
-    ]
-    resources = ["*"]
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:${local.partition}:iam::${local.account_id}:role/aws-service-role/autoscaling.${local.dns_suffix}/AWSServiceRoleForAutoScaling"]
-    }
-  }
-
-  statement {
-    sid = "Grant"
-    actions = [
-      "kms:CreateGrant",
-      "kms:ListGrants",
-      "kms:RevokeGrant",
-    ]
-    resources = ["*"]
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:${local.partition}:iam::${local.account_id}:role/aws-service-role/autoscaling.${local.dns_suffix}/AWSServiceRoleForAutoScaling"]
-    }
-
-    condition {
-      test     = "Bool"
-      variable = "kms:GrantIsForAWSResource"
-      values   = ["true"]
-    }
-  }
 }

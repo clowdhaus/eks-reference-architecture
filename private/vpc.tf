@@ -4,7 +4,7 @@
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.18"
+  version = "~> 4.0"
 
   name = local.name
   cidr = local.vpc_cidr
@@ -14,13 +14,9 @@ module "vpc" {
   public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 48)]
   intra_subnets   = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 52)]
 
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-  enable_nat_gateway      = true
-  single_nat_gateway      = false
-  one_nat_gateway_per_az  = true
-  map_public_ip_on_launch = false
+  enable_nat_gateway     = true
+  single_nat_gateway     = false
+  one_nat_gateway_per_az = true
 
   manage_default_security_group  = true
   default_security_group_tags    = { Name = "${local.name}-default" }
@@ -277,7 +273,7 @@ module "vpc" {
 
 module "vpc_endpoints" {
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   vpc_id             = module.vpc.vpc_id
   security_group_ids = [module.vpc_endpoints_sg.security_group_id]

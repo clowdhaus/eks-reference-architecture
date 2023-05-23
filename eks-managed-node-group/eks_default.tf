@@ -1,12 +1,13 @@
 module "eks_default" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.5"
+  version = "~> 19.14"
 
   cluster_name    = "${local.name}-default"
-  cluster_version = "1.24"
+  cluster_version = "1.26"
 
   # EKS Addons
   cluster_addons = {
+    # aws-ebs-csi-driver = {}
     coredns    = {}
     kube-proxy = {}
     vpc-cni    = {}

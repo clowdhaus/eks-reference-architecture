@@ -2,17 +2,19 @@
 
 ## Features
 
-See more details [here](https://awsdocs-neuron.readthedocs-hosted.com/en/v1.19.0/neuron-deploy/tutorials/tutorial-k8s.html#tutorial-k8s-env-setup-for-neuron)
+See more details [here](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/containers/index.html?tutorials%2Ftutorial-k8s.html=)
 
 [EKS Machine learning inference using AWS Inferentia](https://docs.aws.amazon.com/eks/latest/userguide/inferentia-support.html)
 
 ## Steps to Provision
 
-### Prerequisites
+### Prerequisites:
 
-1. Terraform version 1.0 or later
-2. awscli 2.x
-3. kubectl 1.20 or later
+Ensure that you have the following tools installed locally:
+
+1. [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+2. [kubectl](https://Kubernetes.io/docs/tasks/tools/)
+3. [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
 
 ### Deployment
 
@@ -38,8 +40,6 @@ resources:
   requests:
     memory: 1024Mi
 ```
-
-4. [Optional] The [Deploy a TensorFlow Resnet50 model as a Kubernetes service](https://awsdocs-neuron.readthedocs-hosted.com/en/v1.19.0/neuron-deploy/v1/tutorials/k8s_rn50_demo.html#example-deploy-rn50-as-k8s-service) tutorial provides an example how to use k8s with Inferentia.
 
 ### Tear Down & Clean-Up
 

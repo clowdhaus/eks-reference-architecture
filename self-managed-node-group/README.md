@@ -8,11 +8,13 @@ If there are features that you think are missing, please feel free to open up a 
 
 ## Steps to Provision
 
-### Prerequisites
+### Prerequisites:
 
-1. Terraform version 1.0 or later
-2. awscli 2.7 or later
-3. kubectl 1.20 or later
+Ensure that you have the following tools installed locally:
+
+1. [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+2. [kubectl](https://Kubernetes.io/docs/tasks/tools/)
+3. [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
 
 ### Deployment
 

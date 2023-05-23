@@ -1,9 +1,9 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.5"
+  version = "~> 19.14"
 
   cluster_name    = local.name
-  cluster_version = "1.24"
+  cluster_version = "1.26"
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
@@ -39,17 +39,14 @@ module "eks" {
     vpc-cni    = {}
   }
 
-  fargate_profiles = merge(
-    { for i in range(3) :
-      "kube-system-${element(split("-", local.azs[i]), 2)}" => {
-        selectors = [
-          { namespace = "kube-system" }
-        ]
-        # We want to create a profile per AZ for high availability
-        subnet_ids = [element(module.vpc.private_subnets, i)]
-      }
-    },
-  )
+  fargate_profiles = {
+    kube_system = {
+      name = "kube-system"
+      selectors = [
+        { namespace = "kube-system" }
+      ]
+    }
+  }
 
   tags = module.tags.tags
 }

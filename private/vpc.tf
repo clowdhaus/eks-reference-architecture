@@ -308,7 +308,7 @@ module "vpc_endpoints" {
 
 module "vpc_endpoints_sg" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   name        = "${local.name}-vpc-endpoints"
   description = "Security group for VPC endpoint access"
@@ -390,7 +390,7 @@ resource "aws_cloudwatch_log_group" "client_vpn" {
 
 module "client_vpn_sg" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   name        = "aws-client-vpn"
   description = "Security group for AWS Client VPN"

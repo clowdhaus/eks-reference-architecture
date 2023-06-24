@@ -85,7 +85,7 @@ provider "kubectl" {
 
 locals {
   name        = "nvidia-sliced"
-  region      = "eu-west-1"
+  region      = "us-west-2"
   environment = "nonprod"
 
   vpc_cidr = "10.0.0.0/16"

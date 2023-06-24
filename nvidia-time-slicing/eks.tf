@@ -76,27 +76,3 @@ module "ebs_csi_driver_irsa" {
 
   tags = module.tags.tags
 }
-
-################################################################################
-# NVIDIA time-slicing configmap
-################################################################################
-
-resource "kubernetes_config_map" "time_slice" {
-  metadata {
-    name      = "time-slicing-config"
-    namespace = "gpu-operator"
-  }
-
-  data = {
-    any = <<-EOT
-      version: v1
-      flags:
-        migStrategy: none
-      sharing:
-        timeSlicing:
-          resources:
-          - name: nvidia.com/gpu
-            replicas: 4
-    EOT
-  }
-}

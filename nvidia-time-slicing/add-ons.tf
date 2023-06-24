@@ -14,6 +14,9 @@ module "eks_blueprints_addons" {
   # Wait for compute to be available
   create_delay_dependencies = [for group in module.eks.eks_managed_node_groups : group.node_group_arn]
 
+  enable_aws_load_balancer_controller = true
+  # enable_aws_efs_csi_driver           = true
+
   enable_kube_prometheus_stack = true
   kube_prometheus_stack = {
     values = [
@@ -24,6 +27,7 @@ module "eks_blueprints_addons" {
       EOT
     ]
   }
+
   enable_metrics_server = true
 
   helm_releases = {
@@ -63,6 +67,31 @@ module "eks_blueprints_addons" {
                       resources:
                       - name: nvidia.com/gpu
                         replicas: 4
+        EOT
+      ]
+    }
+    juypterhub = {
+      chart            = "jupyterhub"
+      chart_version    = "2.0.0"
+      repository       = "https://jupyterhub.github.io/helm-chart/"
+      description      = "A Helm chart for Jupyter Hub"
+      namespace        = "jupyterhub"
+      create_namespace = true
+      values = [
+        <<-EOT
+          proxy:
+            service:
+              annotations:
+                alb.ingress.kubernetes.io/scheme: internet-facing
+          singleuser:
+            storage:
+              dynamic:
+                storageClass: gp3
+            extraTolerations:
+              - key: "nvidia.com/gpu"
+                operator: "Equal"
+                value: "true"
+                effect: "NoSchedule"
         EOT
       ]
     }
@@ -107,8 +136,48 @@ resource "kubernetes_storage_class_v1" "gp3" {
   volume_binding_mode    = "WaitForFirstConsumer"
 
   parameters = {
-    encrypted = true
-    fsType    = "ext4"
-    type      = "gp3"
+    fsType = "ext4"
+    type   = "gp3"
   }
 }
+
+# resource "kubernetes_storage_class_v1" "efs" {
+#   metadata {
+#     name = "efs"
+#   }
+
+#   storage_provisioner = "efs.csi.aws.com"
+#   parameters = {
+#     provisioningMode = "efs-ap" # Dynamic provisioning
+#     fileSystemId     = module.efs.id
+#     directoryPerms   = "700"
+#   }
+
+#   depends_on = [
+#     module.eks_blueprints_addons
+#   ]
+# }
+
+# module "efs" {
+#   source  = "terraform-aws-modules/efs/aws"
+#   version = "~> 1.1"
+
+#   creation_token = local.name
+#   name           = local.name
+
+#   # Mount targets / security group
+#   mount_targets = {
+#     for k, v in zipmap(local.azs, module.vpc.private_subnets) : k => { subnet_id = v }
+#   }
+#   security_group_description = "${local.name} EFS security group"
+#   security_group_vpc_id      = module.vpc.vpc_id
+#   security_group_rules = {
+#     vpc = {
+#       # relying on the defaults provdied for EFS/NFS (2049/TCP + ingress)
+#       description = "NFS ingress from VPC private subnets"
+#       cidr_blocks = module.vpc.private_subnets_cidr_blocks
+#     }
+#   }
+
+#   tags = module.tags.tags
+# }

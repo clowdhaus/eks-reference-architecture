@@ -7,7 +7,7 @@ module "eks" {
   version = "~> 19.15"
 
   cluster_name    = local.name
-  cluster_version = "1.27"
+  cluster_version = "1.25"
 
   cluster_endpoint_public_access = true
 
@@ -22,6 +22,31 @@ module "eks" {
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
+
+  node_security_group_additional_rules = {
+    # hub-8081-ingress = {
+    #   description = "Allow inbound traffic from hub on port 8081"
+    #   type        = "ingress"
+    #   from_port   = 8081
+    #   to_port     = 8081
+    #   protocol    = "tcp"
+    #   cidr_blocks = [module.vpc.vpc_cidr_block]
+    # }
+    ingress_self_all = {
+      description = "Node to node all ports/protocols"
+      protocol    = "-1"
+      from_port   = 0
+      to_port     = 0
+      type        = "ingress"
+      self        = true
+    }
+  }
+
+  eks_managed_node_group_defaults = {
+    iam_role_additional_policies = {
+      AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    }
+  }
 
   eks_managed_node_groups = {
     # This nodegroup is for core addons such as CoreDNS, as well as
@@ -38,12 +63,29 @@ module "eks" {
     gpu = {
       ami_type = "BOTTLEROCKET_x86_64_NVIDIA"
       platform = "bottlerocket"
+      # create = false
+
+      # ami_type = "AL2_x86_64_GPU"
 
       instance_types = ["g5.xlarge"]
 
       min_size     = 1
-      max_size     = 3
+      max_size     = 1
       desired_size = 1
+
+      block_device_mappings = {
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size = 128
+            volume_type = "gp3"
+          }
+        }
+      }
+
+      labels = {
+        "nvidia.com/gpu.present" = "true"
+      }
 
       taints = {
         # Ensure only GPU workloads are scheduled on this nodegroup

@@ -14,34 +14,25 @@ module "eks_blueprints_addons" {
   # Wait for compute to be available
   create_delay_dependencies = [for group in module.eks.eks_managed_node_groups : group.node_group_arn if group.node_group_arn != null]
 
+  enable_aws_efs_csi_driver           = true
   enable_aws_load_balancer_controller = true
   aws_load_balancer_controller = {
     chart_version = "1.5.4"
   }
-  enable_aws_efs_csi_driver = true
 
-  # enable_kube_prometheus_stack = false
-  # kube_prometheus_stack = {
-  #   values = [
-  #     <<-EOT
-  #       prometheus:
-  #         prometheusSpec:
-  #           serviceMonitorSelectorNilUsesHelmValues: false
-  #     EOT
-  #   ]
-  # }
-
-  # enable_metrics_server = false
+  enable_metrics_server        = true
+  enable_kube_prometheus_stack = false
+  kube_prometheus_stack = {
+    values = [
+      <<-EOT
+        prometheus:
+          prometheusSpec:
+            serviceMonitorSelectorNilUsesHelmValues: false
+      EOT
+    ]
+  }
 
   helm_releases = {
-    # prometheus-adapter = {
-    #   chart            = "prometheus-adapter"
-    #   chart_version    = "4.2.0"
-    #   repository       = "https://prometheus-community.github.io/helm-charts"
-    #   description      = "A Helm chart for k8s prometheus adapter"
-    #   namespace        = "prometheus-adapter"
-    #   create_namespace = true
-    # }
     juypterhub = {
       chart            = "jupyterhub"
       chart_version    = "2.0.0"
@@ -81,19 +72,84 @@ module "eks_blueprints_addons" {
             storage:
               dynamic:
                 storageClass: efs
-                storageAccessModes: [ReadWriteMany]
-            cmd:
-              - jupyterhub-singleuser
-            extraTolerations:
-              - key: 'nvidia.com/gpu'
-                operator: 'Exists'
-                effect: 'NoSchedule'
+                storageAccessModes: [ReadWriteOnce]
+            extraEnv:
+              OPENAI_API_KEY: "${var.openai_api_key}"
+              HUGGINGFACEHUB_API_TOKEN: "${var.huggingfacehub_api_token}"
             extraResource:
               limits:
                 nvidia.com/gpu: 1
           prePuller:
             continuous:
               enabled: false
+        EOT
+      ]
+    }
+    prometheus-adapter = {
+      chart            = "prometheus-adapter"
+      chart_version    = "4.2.0"
+      repository       = "https://prometheus-community.github.io/helm-charts"
+      description      = "A Helm chart for k8s prometheus adapter"
+      namespace        = "prometheus-adapter"
+      create_namespace = true
+    }
+    weaviate = {
+      chart            = "weaviate"
+      chart_version    = "16.3.1"
+      repository       = "https://weaviate.github.io/weaviate-helm"
+      description      = "A Helm chart for Weaviate"
+      namespace        = "weaviate"
+      create_namespace = true
+      values = [
+        <<-EOT
+          service:
+            type: NodePort
+
+          storage:
+            size: 32Gi
+            storageClassName: efs
+
+          nodeSelector:
+            'nvidia.com/gpu.present': 'true'
+          tolerations:
+            - key: 'nvidia.com/gpu'
+              operator: 'Exists'
+              effect: 'NoSchedule'
+
+          default_vectorizer_module: text2vec-transformers
+
+          modules:
+            text2vec-transformers:
+              enabled: true
+              envconfig:
+                # enable for CUDA support. Your K8s cluster needs to be configured
+                # accordingly and you need to explicitly set GPU requests & limits below
+                enable_cuda: true
+              resources:
+                requests:
+                  # enable if running with CUDA support
+                  nvidia.com/gpu: 1
+                limits:
+                  # enable if running with CUDA support
+                  nvidia.com/gpu: 1
+
+          # The text2vec-openai module uses OpenAI Embeddings API
+          # to dynamically compute vector embeddings based on the
+          # sentence's context.
+          # More information about OpenAI Embeddings API can be found here:
+          # https://beta.openai.com/docs/guides/embeddings/what-are-embeddings
+          text2vec-openai:
+            enabled: true
+            apiKey: ${var.openai_api_key}
+
+          # The text2vec-huggingface module uses HuggingFace API
+          # to dynamically compute vector embeddings based on the
+          # sentence's context.
+          # More information about HuggingFace API can be found here:
+          # https://huggingface.co/docs/api-inference/detailed_parameters#feature-extraction-task
+          text2vec-huggingface:
+            enabled: true
+            apiKey: ${var.huggingfacehub_api_token}
         EOT
       ]
     }
@@ -109,7 +165,7 @@ module "eks_blueprints_addons" {
 resource "kubernetes_annotations" "gp2" {
   api_version = "storage.k8s.io/v1"
   kind        = "StorageClass"
-  # The resources was already created by the ebs-csi-driver addon
+  # This is true because the resources was already created by the ebs-csi-driver addon
   force = "true"
 
   metadata {
@@ -120,6 +176,10 @@ resource "kubernetes_annotations" "gp2" {
     # Modify annotations to remove gp2 as default storage class
     "storageclass.kubernetes.io/is-default-class" = "false"
   }
+
+  depends_on = [
+    module.eks_blueprints_addons
+  ]
 }
 
 resource "kubernetes_storage_class_v1" "gp3" {
@@ -134,13 +194,18 @@ resource "kubernetes_storage_class_v1" "gp3" {
 
   storage_provisioner    = "ebs.csi.aws.com"
   allow_volume_expansion = true
-  reclaim_policy         = "Delete" # For demo, otherwise use `Retain`
+  reclaim_policy         = "Delete"
   volume_binding_mode    = "WaitForFirstConsumer"
 
   parameters = {
-    fsType = "ext4"
-    type   = "gp3"
+    encrypted = true
+    fsType    = "ext4"
+    type      = "gp3"
   }
+
+  depends_on = [
+    module.eks_blueprints_addons
+  ]
 }
 
 resource "kubernetes_storage_class_v1" "efs" {

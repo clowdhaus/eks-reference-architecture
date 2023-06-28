@@ -1,11 +1,5 @@
 # NVIDIA GPU Time-slicing on Amazon EKS
 
-Create secret token:
-
-```sh
-openssl rand -hex 32
-```
-
 Get the endpoint:
 ```sh
 k get ingress jupyterhub -n jupyterhub -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'

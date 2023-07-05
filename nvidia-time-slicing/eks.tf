@@ -50,7 +50,7 @@ module "eks" {
       ami_type = "BOTTLEROCKET_x86_64_NVIDIA"
       platform = "bottlerocket"
 
-      instance_types = ["g5.xlarge"]
+      instance_types = ["g5.2xlarge"]
 
       min_size     = 1
       max_size     = 3

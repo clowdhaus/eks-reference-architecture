@@ -33,58 +33,58 @@ module "eks_blueprints_addons" {
   }
 
   helm_releases = {
-    juypterhub = {
-      chart            = "jupyterhub"
-      chart_version    = "2.0.0"
-      repository       = "https://hub.jupyter.org/helm-chart/"
-      description      = "A Helm chart for Jupyter Hub"
-      namespace        = "jupyterhub"
-      create_namespace = true
-      values = [
-        <<-EOT
-          ingress:
-            enabled: true
-            annotations:
-              alb.ingress.kubernetes.io/scheme: internet-facing
-              alb.ingress.kubernetes.io/target-type: ip
-              kubernetes.io/ingress.class: alb
-          hub:
-            db:
-              pvc:
-                storageClassName: gp3
-          proxy:
-            service:
-              type: NodePort
-          scheduling:
-            userScheduler:
-              nodeSelector:
-                'nvidia.com/gpu.present': 'true'
-              tolerations:
-                - key: 'nvidia.com/gpu'
-                  operator: 'Exists'
-                  effect: 'NoSchedule'
-          singleuser:
-            image:
-              name: jupyter/base-notebook
-              tag: latest
-            nodeSelector:
-              'nvidia.com/gpu.present': 'true'
-            storage:
-              dynamic:
-                storageClass: efs
-                storageAccessModes: [ReadWriteOnce]
-            extraEnv:
-              OPENAI_API_KEY: "${var.openai_api_key}"
-              HUGGINGFACEHUB_API_TOKEN: "${var.huggingfacehub_api_token}"
-            extraResource:
-              limits:
-                nvidia.com/gpu: 1
-          prePuller:
-            continuous:
-              enabled: false
-        EOT
-      ]
-    }
+    # juypterhub = {
+    #   chart            = "jupyterhub"
+    #   chart_version    = "2.0.0"
+    #   repository       = "https://hub.jupyter.org/helm-chart/"
+    #   description      = "A Helm chart for Jupyter Hub"
+    #   namespace        = "jupyterhub"
+    #   create_namespace = true
+    #   values = [
+    #     <<-EOT
+    #       ingress:
+    #         enabled: true
+    #         annotations:
+    #           alb.ingress.kubernetes.io/scheme: internal
+    #           alb.ingress.kubernetes.io/target-type: ip
+    #           kubernetes.io/ingress.class: alb
+    #       hub:
+    #         db:
+    #           pvc:
+    #             storageClassName: gp3
+    #       proxy:
+    #         service:
+    #           type: NodePort
+    #       scheduling:
+    #         userScheduler:
+    #           nodeSelector:
+    #             'nvidia.com/gpu.present': 'true'
+    #           tolerations:
+    #             - key: 'nvidia.com/gpu'
+    #               operator: 'Exists'
+    #               effect: 'NoSchedule'
+    #       singleuser:
+    #         image:
+    #           name: jupyter/base-notebook
+    #           tag: latest
+    #         nodeSelector:
+    #           'nvidia.com/gpu.present': 'true'
+    #         storage:
+    #           dynamic:
+    #             storageClass: efs
+    #             storageAccessModes: [ReadWriteOnce]
+    #         extraEnv:
+    #           OPENAI_API_KEY: "${var.openai_api_key}"
+    #           HUGGINGFACEHUB_API_TOKEN: "${var.huggingfacehub_api_token}"
+    #         extraResource:
+    #           limits:
+    #             nvidia.com/gpu: 1
+    #       prePuller:
+    #         continuous:
+    #           enabled: false
+    #     EOT
+    #   ]
+    # }
     prometheus-adapter = {
       chart            = "prometheus-adapter"
       chart_version    = "4.2.0"
@@ -104,17 +104,14 @@ module "eks_blueprints_addons" {
         <<-EOT
           service:
             type: NodePort
+            annotations:
+              alb.ingress.kubernetes.io/scheme: internal
+              alb.ingress.kubernetes.io/target-type: ip
+              kubernetes.io/ingress.class: alb
 
           storage:
             size: 32Gi
             storageClassName: efs
-
-          nodeSelector:
-            'nvidia.com/gpu.present': 'true'
-          tolerations:
-            - key: 'nvidia.com/gpu'
-              operator: 'Exists'
-              effect: 'NoSchedule'
 
           default_vectorizer_module: text2vec-transformers
 
@@ -132,24 +129,6 @@ module "eks_blueprints_addons" {
                 limits:
                   # enable if running with CUDA support
                   nvidia.com/gpu: 1
-
-          # The text2vec-openai module uses OpenAI Embeddings API
-          # to dynamically compute vector embeddings based on the
-          # sentence's context.
-          # More information about OpenAI Embeddings API can be found here:
-          # https://beta.openai.com/docs/guides/embeddings/what-are-embeddings
-          text2vec-openai:
-            enabled: true
-            apiKey: ${var.openai_api_key}
-
-          # The text2vec-huggingface module uses HuggingFace API
-          # to dynamically compute vector embeddings based on the
-          # sentence's context.
-          # More information about HuggingFace API can be found here:
-          # https://huggingface.co/docs/api-inference/detailed_parameters#feature-extraction-task
-          text2vec-huggingface:
-            enabled: true
-            apiKey: ${var.huggingfacehub_api_token}
         EOT
       ]
     }

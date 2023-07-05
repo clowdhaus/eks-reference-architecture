@@ -5,6 +5,13 @@ Get the endpoint:
 k get ingress jupyterhub -n jupyterhub -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 ```
 
+## Questions
+
+1. What is the preferred storage type for the DB pod and transform pod - EBS or EFS?
+2. The pod that hosts the DB does not require GPU; only the transform pod - correct?
+3. Recommendations for authentication and how to handle multi-tenancy
+4. Recommendations for development setup versus production
+
 ## Features
 
 - TODO

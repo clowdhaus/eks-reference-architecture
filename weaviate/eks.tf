@@ -23,6 +23,26 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
+  node_security_group_additional_rules = {
+    # Cross cluster communication for Weaviate services
+    ingress_self_80 = {
+      description = "Node to node tcp/80"
+      protocol    = "tcp"
+      from_port   = 80
+      to_port     = 80
+      type        = "ingress"
+      self        = true
+    }
+    ingress_self_8080 = {
+      description = "Node to node tcp/8080"
+      protocol    = "tcp"
+      from_port   = 8080
+      to_port     = 8080
+      type        = "ingress"
+      self        = true
+    }
+  }
+
   eks_managed_node_groups = {
     # This nodegroup is for core addons such as CoreDNS,
     # as well as the Weaviate DB pod

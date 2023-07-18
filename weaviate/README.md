@@ -65,8 +65,8 @@ statefulset.apps/weaviate   1/1     127m
 kubectl get svc -n weaviate weaviate -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 ```
 
-6. Open up Sagemaker in the AWS console - navigate to Studio and select the `weaviate` profile and click `Open Studio`
-7. Once the Studio is launched, click `Create Notebook`
+6. Open up Sagemaker in the AWS console - navigate to Notebook and select the `weaviate` instance
+7. Once the notebook is launched, click `Create Notebook`
 8. In the first cell of the notebook, install the Weaviate Python client:
 
 ```python

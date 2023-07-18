@@ -13,7 +13,7 @@ resource "aws_sagemaker_domain" "this" {
     execution_role = aws_iam_role.this.arn
     security_groups = [
       module.sagemaker_sg.security_group_id,
-      module.vpc_endpoints_sg.security_group_id,
+      module.vpc_endpoints.security_group_id,
     ]
   }
 
@@ -21,7 +21,7 @@ resource "aws_sagemaker_domain" "this" {
     execution_role = aws_iam_role.this.arn
     security_groups = [
       module.sagemaker_sg.security_group_id,
-      module.vpc_endpoints_sg.security_group_id,
+      module.vpc_endpoints.security_group_id,
     ]
   }
 }
@@ -52,7 +52,7 @@ resource "aws_sagemaker_user_profile" "this" {
     execution_role = aws_iam_role.this.arn
     security_groups = [
       module.sagemaker_sg.security_group_id,
-      module.vpc_endpoints_sg.security_group_id,
+      module.vpc_endpoints.security_group_id,
     ]
   }
 }

@@ -35,42 +35,27 @@ terraform apply -refresh-only
 terraform plan # should show `No changes. Your infrastructure matches the configuration.`
 ```
 
-3. With the cluster up and running we can check that Karpenter is functioning as intended with the following command:
+3. With the cluster up and running we can check that the cluster is functioning as intended with the following command:
 
 ```bash
 # First, make sure you have updated your local kubeconfig
-aws eks --region us-east-1 update-kubeconfig --name eks-ref-arch-karpenter
-
-# Second, scale the example deployment
-kubectl scale deployment inflate --replicas 5
-
-# You can watch Karpenter's controller logs with
-kubectl logs -f -n karpenter -l app.kubernetes.io/name=karpenter -c controller
+aws eks --region us-east-1 update-kubeconfig --name eks-ref-arch-eks-mng-al2
 ```
 
-You should see a new node named `karpenter.sh/provisioner-name/default` eventually come up in the console; this was provisioned by Karpenter in response to the scaled deployment above.
+```bash
+# View the nodes in the cluster
+kubectl get nodes
+```
+
+```bash
+# View the pods in the Cluster
+kubectl get pods -A
+```
 
 ### Tear Down & Clean-Up
 
-Because Karpenter manages the state of node resources outside of Terraform, Karpenter created resources will need to be de-provisioned first before removing the remaining resources with Terraform.
-
-1. Remove the example deployment created above and any nodes created by Karpenter
-
-```bash
-kubectl delete deployment inflate
-kubectl delete node -l karpenter.sh/provisioner-name=default
-```
-
-2. Remove the resources created by Terraform
+1. Remove the resources created by Terraform
 
 ```bash
 terraform destroy
-```
-
-3. Remove any remaining launch templates that were created by Karpenter
-
-```bash
-aws ec2 describe-launch-templates \
-  | jq -r ".LaunchTemplates[].LaunchTemplateName" \
-  | grep -i "Karpenter-eks-ref-arch-karpenter" \
 ```

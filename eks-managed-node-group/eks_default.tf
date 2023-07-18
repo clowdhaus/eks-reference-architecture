@@ -1,9 +1,9 @@
 module "eks_default" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.14"
+  version = "~> 19.15"
 
   cluster_name    = "${local.name}-default"
-  cluster_version = "1.26"
+  cluster_version = "1.27"
 
   # EKS Addons
   cluster_addons = {

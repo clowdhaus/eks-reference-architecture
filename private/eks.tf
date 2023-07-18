@@ -1,17 +1,15 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.14"
+  version = "~> 19.15"
 
   cluster_name              = local.name
-  cluster_version           = "1.26"
+  cluster_version           = "1.27"
   cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   cluster_addons = {
     coredns    = {}
     kube-proxy = {}
-    vpc-cni = {
-      service_account_role_arn = module.vpc_cni_irsa.iam_role_arn
-    }
+    vpc-cni    = {}
   }
 
   vpc_id      = module.vpc.vpc_id
@@ -20,13 +18,6 @@ module "eks" {
 
   eks_managed_node_group_defaults = {
     instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-
-    # Note: We are using the IRSA created below for permissions.
-    # However, we must deploy a new cluster with permissions for the VPC CNI
-    # to provision IPs or else nodes will fail to join and node group creation fails.
-    # This is ONLY required for creating a new cluster and can be disabled once the
-    # cluster is up and running since the IRSA will be used at that point
-    iam_role_attach_cni_policy = false
   }
 
   eks_managed_node_groups = {
@@ -55,28 +46,6 @@ module "eks" {
           }
         }
       }
-    }
-  }
-
-  tags = module.tags.tags
-}
-
-################################################################################
-# VPC CNI IRSA
-################################################################################
-
-module "vpc_cni_irsa" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.20"
-
-  role_name_prefix      = "VPC-CNI-IRSA-"
-  attach_vpc_cni_policy = true
-  vpc_cni_enable_ipv4   = true
-
-  oidc_providers = {
-    main = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["kube-system:aws-node"]
     }
   }
 

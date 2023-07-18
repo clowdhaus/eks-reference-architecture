@@ -4,7 +4,7 @@
 
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "~> 19.14"
+  version = "~> 19.15"
 
   cluster_name           = module.eks.cluster_name
   irsa_oidc_provider_arn = module.eks.oidc_provider_arn
@@ -25,7 +25,7 @@ resource "helm_release" "karpenter" {
   repository_username = data.aws_ecrpublic_authorization_token.token.user_name
   repository_password = data.aws_ecrpublic_authorization_token.token.password
   chart               = "karpenter"
-  version             = "v0.27.5"
+  version             = "v0.29.1"
 
   # Memory request/limit set to maximize the capacity provisioned by Fargate
   # 2G allocated - 256Mb overhead = 1792Mb

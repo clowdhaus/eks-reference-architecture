@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-dep
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: my-dep
+  template:
+    metadata:
+      labels:
+        app: my-dep
+    spec:
+      containers:
+        - name: my-dep
+          image: public.ecr.aws/amazonlinux/amazonlinux:2
+          volumeMounts:
+          - mountPath: "/scratch"
+            name: scratch
+          command: ["sleep", "1000000"]
+      volumes:
+        - name: scratch
+          ephemeral:
+            volumeClaimTemplate:
+              metadata:
+                labels:
+                  type: my-dep
+              spec:
+                accessModes: [ "ReadWriteOnce" ]
+                storageClassName: gp2
+                volumeMode: Filesystem
+                resources:
+                  requests:
+                    storage: 1Gi

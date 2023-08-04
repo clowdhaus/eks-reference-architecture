@@ -1,4 +1,4 @@
-# Milvus vector DB on Amazon EKS
+# Karpenter GPU Autoscaling
 
 ### Prerequisites:
 
@@ -14,7 +14,8 @@ Ensure that you have the following tools installed locally:
 
 ```bash
 terraform init -upgrade=true
-terraform apply
+terraform apply -target=module.vpc -target=module.eks
+terraform apply -target='module.eks_blueprints_addons.module.karpenter' -target=kubectl_manifest.karpenter_node_template
 ```
 
 2. Once the cluster is up and running and the node group is provisioned, update your Terraform state to align with changes made by the AWS API. This doesn't modify any resources, it just simply aligns your statefile with the current state. You can read more about this at the following links if interested:
@@ -31,14 +32,37 @@ terraform plan # should show `No changes. Your infrastructure matches the config
 
 ```bash
 # First, make sure you have updated your local kubeconfig
-aws eks --region us-west-2 update-kubeconfig --name milvus
+aws eks --region us-west-2 update-kubeconfig --name karpenter-gpu
 ```
 
-4. TODO
+4. Deploy the sample GPU deployment:
+
+```bash
+kubectl apply -f gpu.yaml
+```
+
+5. Scale up the deployment and verify the pods deploy onto GPU (p or g-class) nodes:
+
+```bash
+kubectl scale deployment test-gpu --replicas=4
+
+# Output should look similar to below
+NAME                        READY   STATUS    RESTARTS   AGE
+test-gpu-5964c55c7b-57zbd   1/1     Running   0          4m58s
+test-gpu-5964c55c7b-gbw6r   1/1     Running   0          4m58s
+test-gpu-5964c55c7b-lmkzh   1/1     Running   0          4m58s
+test-gpu-5964c55c7b-qvfmp   1/1     Running   0          4m58s
+```
 
 ### Tear Down & Clean-Up
 
-1. Remove the resources created by Terraform
+1. Scale down the deployment so that the Karpenter created nodes are removed:
+
+```bash
+kubectl delete -f gpu.yaml
+```
+
+2. Remove the resources created by Terraform
 
 ```bash
 terraform destroy -target=module.eks_blueprints_addons

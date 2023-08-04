@@ -15,31 +15,13 @@ module "eks" {
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
     }
-    coredns = {
-      configuration_values = jsonencode({
-        computeType = "Fargate"
-        resources = {
-          limits = {
-            cpu    = "0.25"
-            memory = "256M"
-          }
-          requests = {
-            cpu    = "0.25"
-            memory = "256M"
-          }
-        }
-      })
-    }
+    coredns    = {}
     kube-proxy = {}
     vpc-cni    = {}
   }
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
-
-  # Fargate profiles use the cluster primary security group so these are not utilized
-  create_cluster_security_group = false
-  create_node_security_group    = false
 
   manage_aws_auth_configmap = true
   aws_auth_roles = [
@@ -54,18 +36,13 @@ module "eks" {
     },
   ]
 
-  fargate_profiles = {
-    karpenter = {
-      selectors = [
-        { namespace = "karpenter" }
-      ]
-    }
-    # Required for CoreDNS, can be removed after Karpenter is up and running
-    kube_system = {
-      name = "kube-system"
-      selectors = [
-        { namespace = "kube-system" }
-      ]
+  eks_managed_node_groups = {
+    default = {
+      instance_types = ["m5.large"]
+
+      min_size     = 2
+      max_size     = 3
+      desired_size = 2
     }
   }
 

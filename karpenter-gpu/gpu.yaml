@@ -15,15 +15,14 @@ spec:
         app: gpu
     spec:
       tolerations:
-      - key: nvidia.com/gpu
-        operator: Exists
-        effect: NoSchedule
+      - key: 'nvidia.com/gpu'
+        operator: 'Exists'
+        effect: 'NoSchedule'
       containers:
       - name: gpu-test
-        image: tensorflow/tensorflow:latest-gpu
-        imagePullPolicy: Always
-        command: ["python"]
-        args: ["-u", "-c", "import tensorflow"]
+        image: "oguzpastirmaci/gpu-burn"
+        imagePullPolicy: IfNotPresent
+        command: ["bash", "-c", "while true; do /app/gpu_burn 20; sleep 20; done"]
         resources:
           limits:
-            nvidia.com/gpu: 1
+            nvidia.com/gpu: "1"

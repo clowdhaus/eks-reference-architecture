@@ -1,0 +1,28 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: test-gpu
+  labels:
+    app: gpu
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: gpu
+  template:
+    metadata:
+      labels:
+        app: gpu
+    spec:
+      tolerations:
+      - key: 'nvidia.com/gpu'
+        operator: 'Exists'
+        effect: 'NoSchedule'
+      containers:
+      - name: gpu-test
+        image: "oguzpastirmaci/gpu-burn"
+        imagePullPolicy: IfNotPresent
+        command: ["bash", "-c", "while true; do /app/gpu_burn 20; sleep 20; done"]
+        resources:
+          limits:
+            nvidia.com/gpu: "1"

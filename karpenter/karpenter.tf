@@ -4,9 +4,12 @@
 
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "~> 19.15"
+  version = "~> 20.0"
 
-  cluster_name           = module.eks.cluster_name
+  cluster_name = module.eks.cluster_name
+
+  # EKS Fargate currently does not support Pod Identity
+  enable_irsa            = true
   irsa_oidc_provider_arn = module.eks.oidc_provider_arn
 
   tags = module.tags.tags
@@ -17,86 +20,90 @@ module "karpenter" {
 ################################################################################
 
 resource "helm_release" "karpenter" {
-  namespace        = "karpenter"
-  create_namespace = true
-
+  namespace           = "karpenter"
+  create_namespace    = true
   name                = "karpenter"
   repository          = "oci://public.ecr.aws/karpenter"
   repository_username = data.aws_ecrpublic_authorization_token.token.user_name
   repository_password = data.aws_ecrpublic_authorization_token.token.password
   chart               = "karpenter"
-  version             = "v0.30.0"
+  version             = "v0.33.2"
+  wait                = false
 
-  # Memory request/limit set to maximize the capacity provisioned by Fargate
-  # 2G allocated - 256Mb overhead = 1792Mb
   values = [
     <<-EOT
-      controller:
-        resources:
-          requests:
-            memory: "1792M"
-          limits:
-            memory: "1792M"
-      nodeSelector:
-        eks.amazonaws.com/compute-type: fargate
-      settings:
-        aws:
-          clusterName: ${module.eks.cluster_name}
-          clusterEndpoint: ${module.eks.cluster_endpoint}
-          defaultInstanceProfile: ${module.karpenter.instance_profile_name}
-          interruptionQueueName: ${module.karpenter.queue_name}
-      serviceAccount:
-        annotations:
-          eks.amazonaws.com/role-arn: ${module.karpenter.irsa_arn}
+    settings:
+      clusterName: ${module.eks.cluster_name}
+      clusterEndpoint: ${module.eks.cluster_endpoint}
+      interruptionQueue: ${module.karpenter.queue_name}
+    serviceAccount:
+      annotations:
+        eks.amazonaws.com/role-arn: ${module.karpenter.iam_role_arn}
     EOT
   ]
 }
 
 ################################################################################
-# Karpenter Provisioner
+# Karpenter - NodeClass & NodePool
 ################################################################################
 
-resource "kubectl_manifest" "karpenter_provisioner" {
+resource "kubectl_manifest" "karpenter_node_class" {
   yaml_body = <<-YAML
-    apiVersion: karpenter.sh/v1alpha5
-    kind: Provisioner
+    apiVersion: karpenter.k8s.aws/v1beta1
+    kind: EC2NodeClass
     metadata:
       name: default
     spec:
-      requirements:
-        - key: karpenter.sh/capacity-type
-          operator: In
-          values: ["spot"]
-      limits:
-        resources:
-          cpu: 1000
-      providerRef:
-        name: default
-      ttlSecondsAfterEmpty: 30
-  YAML
-
-  depends_on = [
-    helm_release.karpenter
-  ]
-}
-
-resource "kubectl_manifest" "karpenter_node_template" {
-  yaml_body = <<-YAML
-    apiVersion: karpenter.k8s.aws/v1alpha1
-    kind: AWSNodeTemplate
-    metadata:
-      name: default
-    spec:
-      subnetSelector:
-        karpenter.sh/discovery: ${module.eks.cluster_name}
-      securityGroupSelector:
-        karpenter.sh/discovery: ${module.eks.cluster_name}
+      amiFamily: AL2
+      role: ${module.karpenter.node_iam_role_name}
+      subnetSelectorTerms:
+        - tags:
+            karpenter.sh/discovery: ${module.eks.cluster_name}
+      securityGroupSelectorTerms:
+        - tags:
+            karpenter.sh/discovery: ${module.eks.cluster_name}
       tags:
         karpenter.sh/discovery: ${module.eks.cluster_name}
   YAML
 
   depends_on = [
     helm_release.karpenter
+  ]
+}
+
+resource "kubectl_manifest" "karpenter_node_pool" {
+  yaml_body = <<-YAML
+    apiVersion: karpenter.sh/v1beta1
+    kind: NodePool
+    metadata:
+      name: default
+    spec:
+      template:
+        spec:
+          nodeClassRef:
+            name: default
+          requirements:
+            - key: "karpenter.k8s.aws/instance-category"
+              operator: In
+              values: ["c", "m", "r"]
+            - key: "karpenter.k8s.aws/instance-cpu"
+              operator: In
+              values: ["4", "8", "16", "32"]
+            - key: "karpenter.k8s.aws/instance-hypervisor"
+              operator: In
+              values: ["nitro"]
+            - key: "karpenter.k8s.aws/instance-generation"
+              operator: Gt
+              values: ["2"]
+      limits:
+        cpu: 1000
+      disruption:
+        consolidationPolicy: WhenEmpty
+        consolidateAfter: 30s
+  YAML
+
+  depends_on = [
+    kubectl_manifest.karpenter_node_class
   ]
 }
 

@@ -1,13 +1,7 @@
 locals {
-  sso_path    = "/aws-reserved/sso.amazonaws.com/"
   plugin_name = "neuron-device-plugin"
 
   inferentia_instance_classes = ["inf1.xlarge", "inf1.2xlarge", "inf1.6xlarge", "inf1.4xlarge"]
-}
-
-data "aws_iam_roles" "sso_admin" {
-  name_regex  = "AWSReservedSSO_AWSAdministratorAccess_.*"
-  path_prefix = local.sso_path
 }
 
 ################################################################################
@@ -16,27 +10,15 @@ data "aws_iam_roles" "sso_admin" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.15"
+  version = "~> 20.0"
 
   cluster_name    = local.name
-  cluster_version = "1.27"
+  cluster_version = "1.29"
 
   cluster_endpoint_public_access = true
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
-
-  enable_irsa = true
-
-  manage_aws_auth_configmap = true
-  aws_auth_roles = [
-    {
-      # Need to strip path -> https://github.com/kubernetes-sigs/aws-iam-authenticator/issues/268
-      rolearn  = replace(one(data.aws_iam_roles.sso_admin.arns), "/${local.sso_path}/", "/")
-      username = "sso_admin"
-      groups   = ["system:masters"]
-    },
-  ]
 
   eks_managed_node_groups = {
     inf1 = {
@@ -183,7 +165,7 @@ resource "kubernetes_daemon_set_v1" "neuron_device" {
 
         container {
           # https://gallery.ecr.aws/neuron/neuron-device-plugin
-          image             = "public.ecr.aws/neuron/neuron-device-plugin:2.17.3.0"
+          image             = "public.ecr.aws/neuron/neuron-device-plugin:2.19.16.0"
           name              = local.plugin_name
           image_pull_policy = "Always"
 

@@ -1,10 +1,9 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.15"
+  version = "~> 20.0"
 
-  cluster_name              = local.name
-  cluster_version           = "1.27"
-  cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+  cluster_name    = local.name
+  cluster_version = "1.29"
 
   cluster_addons = {
     coredns    = {}
@@ -12,9 +11,8 @@ module "eks" {
     vpc-cni    = {}
   }
 
-  vpc_id      = module.vpc.vpc_id
-  subnet_ids  = module.vpc.private_subnets
-  enable_irsa = true
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
 
   eks_managed_node_group_defaults = {
     instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]

@@ -1,9 +1,9 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.15"
+  version = "~> 20.0"
 
   cluster_name    = local.name
-  cluster_version = "1.27"
+  cluster_version = "1.29"
 
   cluster_endpoint_public_access = true
 
@@ -29,6 +29,7 @@ module "eks" {
     windows = {
       use_custom_launch_template = false
       ami_type                   = "WINDOWS_CORE_2022_x86_64"
+      platform                   = "windows"
       instance_types             = ["m5.large"]
 
       min_size     = 1

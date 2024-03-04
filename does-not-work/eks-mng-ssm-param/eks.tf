@@ -26,7 +26,7 @@ module "eks_al2" {
       instance_types = ["t4g.large"]
 
       # Resolve AMI ID from SSM parameter
-      ami_id = "resolve:ssm:/aws/service/eks/optimized-ami/${local.cluster_version}/amazon-linux-2/recommended/image_id"
+      ami_id                     = "resolve:ssm:/aws/service/eks/optimized-ami/${local.cluster_version}/amazon-linux-2/recommended/image_id"
       enable_bootstrap_user_data = true
 
       iam_role_additional_policies = {
@@ -54,7 +54,7 @@ module "eks_al2" {
 }
 
 resource "aws_iam_policy" "ssm" {
-  name_prefix        = "${local.name}-ssm"
+  name_prefix = "${local.name}-ssm"
   description = "Resolve AMI ID SSM parameter"
 
   policy = jsonencode({

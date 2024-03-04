@@ -2,7 +2,7 @@ locals {
   gpu_instance_type = "g4dn.xlarge"
 }
 
-module "eks_al2" {
+module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 

@@ -1,0 +1,92 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: llama2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: llama2
+  name: llama2-ex
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: llama2-ex
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: llama2-ex
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/instance-type
+                    operator: In
+                    values:
+                      - inf2.48xlarge
+      containers:
+        - name: llama2-inf
+          image: public.ecr.aws/d4w0n5z5/llama2-example-repo
+          imagePullPolicy: Always
+          command:
+            [
+              'python3',
+              '-m',
+              'vllm.entrypoints.openai.api_server',
+              '--model=NousResearch/Llama-2-13b-chat-hf',
+              '--tensor-parallel-size=8',
+              '--max-num-seqs=24',
+              '--max-model-len=4096',
+              '--block-size=4096',
+            ]
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              aws.amazon.com/neurondevice: '2'
+            limits:
+              aws.amazon.com/neurondevice: '2'
+      tolerations:
+        - key: 'aws.amazon.com/neuron'
+          operator: Exists
+          effect: NoSchedule
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: llama2
+  name: llama2-ex
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: llama2-ex
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: llama2
+  name: llama2-ex
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: llama2-ex
+                port:
+                  name: http

@@ -51,6 +51,18 @@ module "eks" {
       max_size     = 1
       desired_size = 1
 
+      # Default AMI has only 8GB of storage
+      block_device_mappings = {
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size           = 256
+            volume_type           = "gp3"
+            delete_on_termination = true
+          }
+        }
+      }
+
       taints = {
         # Ensure only GPU workloads are scheduled on this node group
         gpu = {

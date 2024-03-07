@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inflate
+spec:
+  replicas: 8
+  selector:
+    matchLabels:
+      app: inflate
+  template:
+    metadata:
+      labels:
+        app: inflate
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: inflate
+          image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
+          resources:
+            # We are consuming (nearly) all resources for an m5.large
+            # which maps one pod per node
+            requests:
+              cpu: 1500m
+              memory: 6Gi
+            limits:
+              cpu: 1500m
+              memory: 6Gi

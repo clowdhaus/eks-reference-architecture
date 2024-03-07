@@ -33,43 +33,19 @@ module "eks" {
   }
 
   eks_managed_node_groups = {
-    # This node group is for core addons such as CoreDNS
     default = {
       instance_types = ["m5.large"]
 
       min_size     = 1
-      max_size     = 2
-      desired_size = 2
-    }
-
-    inferentia = {
-      ami_type       = "AL2_x86_64_GPU"
-      instance_types = ["inf2.48xlarge"]
-
-      min_size     = 1
-      max_size     = 1
+      max_size     = 20
       desired_size = 1
 
-      # Default AMI has only 8GB of storage
-      block_device_mappings = {
-        xvda = {
-          device_name = "/dev/xvda"
-          ebs = {
-            volume_size           = 256
-            volume_type           = "gp3"
-            delete_on_termination = true
-          }
-        }
-      }
-
-      taints = {
-        # Ensure only Neuron workloads are scheduled on this node group
-        gpu = {
-          key    = "aws.amazon.com/neuron"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        }
+      tags = {
+        "k8s.io/cluster-autoscaler/enabled" : true,
+        "k8s.io/cluster-autoscaler/${local.name}" : "owned",
       }
     }
   }
+
+  tags = module.tags.tags
 }

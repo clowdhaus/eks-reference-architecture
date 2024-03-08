@@ -4,7 +4,7 @@
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.4"
+  version = "~> 20.5"
 
   cluster_name    = local.name
   cluster_version = "1.29"
@@ -40,7 +40,7 @@ module "eks" {
       max_size     = 20
       desired_size = 1
 
-      tags = {
+      launch_template_tags = {
         "k8s.io/cluster-autoscaler/enabled" : true,
         "k8s.io/cluster-autoscaler/${local.name}" : "owned",
       }

@@ -152,5 +152,11 @@ This will show the endpoint that can be used to send requests to the model and g
 1. Remove the resources created by Terraform
 
 ```sh
+# Necessary to avoid removing Terraform's permissions too soon before its finished
+# cleaning up the resources it deployed inside the cluster
+terraform state rm 'module.eks.aws_eks_access_entry.this["cluster_creator"]' || true
+terraform state rm 'module.eks.aws_eks_access_policy_association.this["cluster_creator_admin"]' || true
+
+terraform destroy -target='module.eks_blueprints_addons'
 terraform destroy
 ```

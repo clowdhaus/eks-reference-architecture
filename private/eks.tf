@@ -56,7 +56,7 @@ module "eks" {
 
 module "ebs_kms" {
   source  = "terraform-aws-modules/kms/aws"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   description = "EBS volume encryption key"
 

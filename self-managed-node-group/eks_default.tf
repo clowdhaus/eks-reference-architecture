@@ -3,9 +3,10 @@ module "eks_default" {
   version = "~> 20.0"
 
   cluster_name    = "${local.name}-default"
-  cluster_version = "1.20"
+  cluster_version = "1.30"
 
-  cluster_endpoint_public_access = true
+  enable_cluster_creator_admin_permissions = true
+  cluster_endpoint_public_access           = true
 
   # EKS Addons
   cluster_addons = {
@@ -21,9 +22,11 @@ module "eks_default" {
     default = {
       instance_type = "m5.large"
 
-      min_size     = 1
+      ami_type = "AL2023_x86_64_STANDARD"
+
+      min_size     = 2
       max_size     = 3
-      desired_size = 1
+      desired_size = 2
     }
   }
 

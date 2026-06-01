@@ -16,7 +16,7 @@ module "eks_blueprints_addons" {
 
   enable_aws_load_balancer_controller = true
   aws_load_balancer_controller = {
-    chart_version = "1.17.1"
+    chart_version = "3.3.0"
   }
   enable_metrics_server        = true
   enable_kube_prometheus_stack = false

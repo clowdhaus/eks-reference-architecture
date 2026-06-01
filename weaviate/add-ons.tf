@@ -1,89 +1,123 @@
 ################################################################################
-# Addons
+# AWS Load Balancer Controller - Pod Identity
 ################################################################################
 
-module "eks_blueprints_addons" {
-  source  = "aws-ia/eks-blueprints-addons/aws"
-  version = "~> 1.23"
+module "alb_controller_pod_identity" {
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "~> 2.0"
 
-  cluster_name      = module.eks.cluster_name
-  cluster_endpoint  = module.eks.cluster_endpoint
-  cluster_version   = module.eks.cluster_version
-  oidc_provider_arn = module.eks.oidc_provider_arn
+  name                            = "alb-controller-${local.name}"
+  attach_aws_lb_controller_policy = true
 
-  # Wait for compute to be available
-  create_delay_dependencies = [for group in module.eks.eks_managed_node_groups : group.node_group_arn if group.node_group_arn != null]
-
-  enable_aws_load_balancer_controller = true
-  aws_load_balancer_controller = {
-    chart_version = "3.3.0"
-  }
-  enable_metrics_server        = true
-  enable_kube_prometheus_stack = false
-  kube_prometheus_stack = {
-    values = [
-      <<-EOT
-        prometheus:
-          prometheusSpec:
-            serviceMonitorSelectorNilUsesHelmValues: false
-      EOT
-    ]
-  }
-
-  helm_releases = {
-    prometheus-adapter = {
-      chart            = "prometheus-adapter"
-      chart_version    = "5.3.0"
-      repository       = "https://prometheus-community.github.io/helm-charts"
-      description      = "A Helm chart for k8s prometheus adapter"
-      namespace        = "prometheus-adapter"
-      create_namespace = true
-    }
-    weaviate = {
-      chart            = "weaviate"
-      chart_version    = "17.8.1"
-      repository       = "https://weaviate.github.io/weaviate-helm"
-      description      = "A Helm chart for Weaviate"
-      namespace        = "weaviate"
-      create_namespace = true
-      values = [
-        <<-EOT
-          image:
-            tag: 1.20.0
-
-          service:
-            type: LoadBalancer
-            annotations:
-              service.beta.kubernetes.io/aws-load-balancer-internal: "true"
-              service.beta.kubernetes.io/aws-load-balancer-type: nlb-ip
-              service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-
-          storage:
-            size: 64Gi
-            storageClassName: gp3
-
-          default_vectorizer_module: text2vec-transformers
-
-          modules:
-            text2vec-transformers:
-              enabled: true
-              envconfig:
-                # enable for CUDA support. Your K8s cluster needs to be configured
-                # accordingly and you need to explicitly set GPU requests & limits below
-                enable_cuda: true
-              resources:
-                requests:
-                  # enable if running with CUDA support
-                  nvidia.com/gpu: 1
-                limits:
-                  # enable if running with CUDA support
-                  nvidia.com/gpu: 1
-        EOT
-      ]
+  associations = {
+    main = {
+      cluster_name    = module.eks.cluster_name
+      namespace       = "kube-system"
+      service_account = "aws-load-balancer-controller"
     }
   }
 
   tags = module.tags.tags
+}
+
+################################################################################
+# AWS Load Balancer Controller - Helm Chart
+################################################################################
+
+resource "helm_release" "alb_controller" {
+  namespace = "kube-system"
+  name      = "aws-load-balancer-controller"
+
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  version    = "3.3.0"
+  wait       = false
+
+  values = [
+    <<-EOT
+    clusterName: ${module.eks.cluster_name}
+    vpcId: ${module.vpc.vpc_id}
+    EOT
+  ]
+}
+
+################################################################################
+# Metrics Server - Helm Chart
+################################################################################
+
+resource "helm_release" "metrics_server" {
+  namespace = "kube-system"
+  name      = "metrics-server"
+
+  repository = "https://kubernetes-sigs.github.io/metrics-server"
+  chart      = "metrics-server"
+  version    = "3.13.0"
+  wait       = false
+}
+
+################################################################################
+# Prometheus Adapter - Helm Chart
+################################################################################
+
+resource "helm_release" "prometheus_adapter" {
+  namespace        = "prometheus-adapter"
+  create_namespace = true
+  name             = "prometheus-adapter"
+
+  repository = "https://prometheus-community.github.io/helm-charts"
+  chart      = "prometheus-adapter"
+  version    = "5.3.0"
+  wait       = false
+}
+
+################################################################################
+# Weaviate - Helm Chart
+################################################################################
+
+resource "helm_release" "weaviate" {
+  namespace        = "weaviate"
+  create_namespace = true
+  name             = "weaviate"
+
+  repository = "https://weaviate.github.io/weaviate-helm"
+  chart      = "weaviate"
+  version    = "17.8.1"
+  wait       = false
+
+  values = [
+    <<-EOT
+    image:
+      tag: 1.20.0
+
+    service:
+      type: LoadBalancer
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb-ip
+        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+    storage:
+      size: 64Gi
+      storageClassName: gp3
+
+    default_vectorizer_module: text2vec-transformers
+
+    modules:
+      text2vec-transformers:
+        enabled: true
+        envconfig:
+          # enable for CUDA support. Your K8s cluster needs to be configured
+          # accordingly and you need to explicitly set GPU requests & limits below
+          enable_cuda: true
+        resources:
+          requests:
+            # enable if running with CUDA support
+            nvidia.com/gpu: 1
+          limits:
+            # enable if running with CUDA support
+            nvidia.com/gpu: 1
+    EOT
+  ]
 }
 
 ################################################################################
@@ -106,7 +140,7 @@ resource "kubernetes_annotations" "gp2" {
   }
 
   depends_on = [
-    module.eks_blueprints_addons
+    module.eks,
   ]
 }
 
@@ -132,6 +166,6 @@ resource "kubernetes_storage_class_v1" "gp3" {
   }
 
   depends_on = [
-    module.eks_blueprints_addons
+    module.eks,
   ]
 }

@@ -1,32 +1,44 @@
 ################################################################################
-# Addons
+# AWS Load Balancer Controller - Pod Identity
 ################################################################################
 
-module "eks_blueprints_addons" {
-  source  = "aws-ia/eks-blueprints-addons/aws"
-  version = "~> 1.23"
+module "alb_controller_pod_identity" {
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "~> 2.0"
 
-  cluster_name      = module.eks.cluster_name
-  cluster_endpoint  = module.eks.cluster_endpoint
-  cluster_version   = module.eks.cluster_version
-  oidc_provider_arn = module.eks.oidc_provider_arn
+  name                            = "alb-controller-${local.name}"
+  attach_aws_lb_controller_policy = true
 
-  # Wait for compute to be available
-  create_delay_dependencies = [for group in module.eks.eks_managed_node_groups :
-    group.node_group_arn if group.node_group_arn != null
-  ]
-
-  enable_aws_load_balancer_controller = true
-  aws_load_balancer_controller = {
-    set = [
-      {
-        name  = "vpcId"
-        value = module.vpc.vpc_id
-      },
-    ]
+  associations = {
+    main = {
+      cluster_name    = module.eks.cluster_name
+      namespace       = "kube-system"
+      service_account = "aws-load-balancer-controller"
+    }
   }
 
   tags = module.tags.tags
+}
+
+################################################################################
+# AWS Load Balancer Controller - Helm Chart
+################################################################################
+
+resource "helm_release" "alb_controller" {
+  namespace = "kube-system"
+  name      = "aws-load-balancer-controller"
+
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  version    = "3.3.0"
+  wait       = false
+
+  values = [
+    <<-EOT
+    clusterName: ${module.eks.cluster_name}
+    vpcId: ${module.vpc.vpc_id}
+    EOT
+  ]
 }
 
 ################################################################################

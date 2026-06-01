@@ -1,22 +1,22 @@
 terraform {
-  required_version = ">= 1.3.2"
+  required_version = ">= 1.5.7"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 5.40"
+      version = ">= 6.0"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 2.10"
+      version = "~> 2.17"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = ">= 2.20"
+      version = ">= 3.0"
     }
     null = {
       source  = "hashicorp/null"
-      version = ">= 3.0"
+      version = ">= 3.3"
     }
   }
 
@@ -90,7 +90,7 @@ data "aws_availability_zones" "available" {}
 
 module "tags" {
   source  = "clowdhaus/tags/aws"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   application = local.name
   environment = local.environment

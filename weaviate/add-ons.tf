@@ -4,7 +4,7 @@
 
 module "eks_blueprints_addons" {
   source  = "aws-ia/eks-blueprints-addons/aws"
-  version = "~> 1.0"
+  version = "~> 1.23"
 
   cluster_name      = module.eks.cluster_name
   cluster_endpoint  = module.eks.cluster_endpoint
@@ -16,7 +16,7 @@ module "eks_blueprints_addons" {
 
   enable_aws_load_balancer_controller = true
   aws_load_balancer_controller = {
-    chart_version = "1.5.4"
+    chart_version = "1.17.1"
   }
   enable_metrics_server        = true
   enable_kube_prometheus_stack = false
@@ -33,7 +33,7 @@ module "eks_blueprints_addons" {
   helm_releases = {
     prometheus-adapter = {
       chart            = "prometheus-adapter"
-      chart_version    = "4.2.0"
+      chart_version    = "5.3.0"
       repository       = "https://prometheus-community.github.io/helm-charts"
       description      = "A Helm chart for k8s prometheus adapter"
       namespace        = "prometheus-adapter"
@@ -41,7 +41,7 @@ module "eks_blueprints_addons" {
     }
     weaviate = {
       chart            = "weaviate"
-      chart_version    = "16.4.0"
+      chart_version    = "17.8.1"
       repository       = "https://weaviate.github.io/weaviate-helm"
       description      = "A Helm chart for Weaviate"
       namespace        = "weaviate"

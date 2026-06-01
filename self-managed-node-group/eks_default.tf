@@ -1,15 +1,15 @@
 module "eks_default" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+  version = "~> 21.0"
 
-  cluster_name    = "${local.name}-default"
-  cluster_version = "1.30"
+  name               = "${local.name}-default"
+  kubernetes_version = "1.30"
 
   enable_cluster_creator_admin_permissions = true
-  cluster_endpoint_public_access           = true
+  endpoint_public_access                   = true
 
   # EKS Addons
-  cluster_addons = {
+  addons = {
     coredns    = {}
     kube-proxy = {}
     vpc-cni    = {}

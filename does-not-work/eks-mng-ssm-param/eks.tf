@@ -4,15 +4,15 @@ locals {
 
 module "eks_al2" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+  version = "~> 21.0"
 
-  cluster_name    = local.name
-  cluster_version = local.cluster_version
+  name               = local.name
+  kubernetes_version = local.cluster_version
 
   enable_cluster_creator_admin_permissions = true
 
   # EKS Addons
-  cluster_addons = {
+  addons = {
     coredns    = {}
     kube-proxy = {}
     vpc-cni    = {}

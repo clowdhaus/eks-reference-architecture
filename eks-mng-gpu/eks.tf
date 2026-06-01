@@ -4,20 +4,20 @@ locals {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+  version = "~> 21.0"
 
-  cluster_name    = local.name
-  cluster_version = "1.29"
+  name               = local.name
+  kubernetes_version = "1.29"
 
   # To facilitate easier interaction for demonstration purposes
-  cluster_endpoint_public_access = true
+  endpoint_public_access = true
 
   # Gives Terraform identity admin access to cluster which will
   # allow deploying resources into the cluster
   enable_cluster_creator_admin_permissions = true
 
   # EKS Addons
-  cluster_addons = {
+  addons = {
     coredns    = {}
     kube-proxy = {}
     vpc-cni    = {}
@@ -25,13 +25,6 @@ module "eks" {
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
-
-  eks_managed_node_group_defaults = {
-    iam_role_additional_policies = {
-      # Not required, but used in the example to access the nodes to inspect drivers and devices
-      AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-    }
-  }
 
   eks_managed_node_groups = {
     # This node group is for core addons such as CoreDNS
@@ -41,6 +34,11 @@ module "eks" {
       min_size     = 1
       max_size     = 2
       desired_size = 2
+
+      iam_role_additional_policies = {
+        # Not required, but used in the example to access the nodes to inspect drivers and devices
+        AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      }
     }
 
     gpu = {
@@ -50,6 +48,11 @@ module "eks" {
       min_size     = 1
       max_size     = 1
       desired_size = 1
+
+      iam_role_additional_policies = {
+        # Not required, but used in the example to access the nodes to inspect drivers and devices
+        AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      }
 
       # Default AMI has only 8GB of storage
       block_device_mappings = {
@@ -85,7 +88,7 @@ resource "helm_release" "nvidia_device_plugin" {
   name             = "nvidia-device-plugin"
   repository       = "https://nvidia.github.io/k8s-device-plugin"
   chart            = "nvidia-device-plugin"
-  version          = "0.17.1"
+  version          = "0.19.2"
   namespace        = "nvidia-device-plugin"
   create_namespace = true
   wait             = false

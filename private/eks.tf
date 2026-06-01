@@ -1,11 +1,11 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+  version = "~> 21.0"
 
-  cluster_name    = local.name
-  cluster_version = "1.29"
+  name               = local.name
+  kubernetes_version = "1.29"
 
-  cluster_addons = {
+  addons = {
     coredns    = {}
     kube-proxy = {}
     vpc-cni    = {}
@@ -14,14 +14,11 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
-  eks_managed_node_group_defaults = {
-    instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-  }
-
   eks_managed_node_groups = {
     eks-reference-secure-1 = {
-      ami_type = "BOTTLEROCKET_x86_64"
-      platform = "bottlerocket"
+      instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
+      ami_type       = "BOTTLEROCKET_x86_64"
+      platform       = "bottlerocket"
 
       bootstrap_extra_args = <<-EOT
         # extra args added
@@ -56,7 +53,7 @@ module "eks" {
 
 module "ebs_kms" {
   source  = "terraform-aws-modules/kms/aws"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   description = "EBS volume encryption key"
 

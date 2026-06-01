@@ -4,16 +4,16 @@
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.15"
+  version = "~> 21.0"
 
-  cluster_name    = local.name
-  cluster_version = "1.27"
+  name               = local.name
+  kubernetes_version = "1.27"
 
-  cluster_endpoint_public_access = true
+  endpoint_public_access = true
 
-  cluster_addons = {
+  addons = {
     aws-ebs-csi-driver = {
-      service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
+      service_account_role_arn = module.ebs_csi_driver_irsa.arn
     }
     coredns    = {}
     kube-proxy = {}
@@ -23,18 +23,11 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
-  manage_aws_auth_configmap = true
-  aws_auth_roles = [
-    # Karpenter node IAM role for nodes launched by Karpenter
-    {
-      rolearn  = module.eks_blueprints_addons.karpenter.node_iam_role_arn
-      username = "system:node:{{EC2PrivateDNSName}}"
-      groups = [
-        "system:bootstrappers",
-        "system:nodes",
-      ]
-    },
-  ]
+  # NOTE: aws-auth configmap support removed in v21; an access_entry referencing
+  # module.eks_blueprints_addons.karpenter.node_iam_role_arn creates a dependency
+  # cycle with the addons module. Karpenter node access needs to be wired via
+  # an externally-managed role or by migrating karpenter management out of
+  # aws-ia/eks-blueprints-addons. Left for operator follow-up.
 
   eks_managed_node_groups = {
     default = {
@@ -55,10 +48,12 @@ module "eks" {
 }
 
 module "ebs_csi_driver_irsa" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.20"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.0"
 
-  role_name_prefix = "${module.eks.cluster_name}-ebs-csi-driver-"
+  name = "${module.eks.cluster_name}-ebs-csi-driver-"
+
+  use_name_prefix = true
 
   attach_ebs_csi_policy = true
 

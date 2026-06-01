@@ -1,10 +1,10 @@
 terraform {
-  required_version = ">= 1.3.2"
+  required_version = ">= 1.5.7"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 5.40"
+      version = ">= 6.0"
     }
   }
 
@@ -56,7 +56,7 @@ data "aws_partition" "current" {}
 
 module "tags" {
   source  = "clowdhaus/tags/aws"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   application = local.name
   environment = local.environment

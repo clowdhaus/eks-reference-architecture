@@ -4,16 +4,16 @@
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+  version = "~> 21.0"
 
-  cluster_name    = local.name
-  cluster_version = "1.29"
+  name               = local.name
+  kubernetes_version = "1.29"
 
-  cluster_endpoint_public_access = true
+  endpoint_public_access = true
 
-  cluster_addons = {
+  addons = {
     aws-ebs-csi-driver = {
-      service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
+      service_account_role_arn = module.ebs_csi_driver_irsa.arn
     }
     coredns    = {}
     kube-proxy = {}
@@ -111,10 +111,12 @@ module "eks" {
 }
 
 module "ebs_csi_driver_irsa" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.20"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.0"
 
-  role_name_prefix = "${module.eks.cluster_name}-ebs-csi-driver-"
+  name = "${module.eks.cluster_name}-ebs-csi-driver-"
+
+  use_name_prefix = true
 
   attach_ebs_csi_policy = true
 

@@ -1,12 +1,12 @@
 module "eks_bottlerocket" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+  version = "~> 21.0"
 
-  cluster_name    = "${local.name}-br"
-  cluster_version = "1.29"
+  name               = "${local.name}-br"
+  kubernetes_version = "1.29"
 
   # EKS Addons
-  cluster_addons = {
+  addons = {
     # aws-ebs-csi-driver = {}
     coredns    = {}
     kube-proxy = {}

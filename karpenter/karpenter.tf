@@ -4,13 +4,9 @@
 
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "~> 20.0"
+  version = "~> 21.0"
 
   cluster_name = module.eks.cluster_name
-
-  # EKS Fargate currently does not support Pod Identity
-  enable_irsa            = true
-  irsa_oidc_provider_arn = module.eks.oidc_provider_arn
 
   tags = module.tags.tags
 }
@@ -27,7 +23,7 @@ resource "helm_release" "karpenter" {
   repository_username = data.aws_ecrpublic_authorization_token.token.user_name
   repository_password = data.aws_ecrpublic_authorization_token.token.password
   chart               = "karpenter"
-  version             = "1.5.0"
+  version             = "1.12.0"
   wait                = false
 
   values = [

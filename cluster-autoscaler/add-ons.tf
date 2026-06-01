@@ -1,22 +1,47 @@
 ################################################################################
-# Addons
+# Cluster Autoscaler - Pod Identity
 ################################################################################
 
-module "eks_blueprints_addons" {
-  source  = "aws-ia/eks-blueprints-addons/aws"
-  version = "~> 1.23"
+module "cluster_autoscaler_pod_identity" {
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "~> 2.0"
 
-  cluster_name      = module.eks.cluster_name
-  cluster_endpoint  = module.eks.cluster_endpoint
-  cluster_version   = module.eks.cluster_version
-  oidc_provider_arn = module.eks.oidc_provider_arn
+  name                             = "cluster-autoscaler-${local.name}"
+  attach_cluster_autoscaler_policy = true
+  cluster_autoscaler_cluster_names = [module.eks.cluster_name]
 
-  # Wait for compute to be available
-  create_delay_dependencies = [for group in module.eks.eks_managed_node_groups :
-    group.node_group_arn if group.node_group_arn != null
-  ]
-
-  enable_cluster_autoscaler = true
+  associations = {
+    main = {
+      cluster_name    = module.eks.cluster_name
+      namespace       = "kube-system"
+      service_account = "cluster-autoscaler"
+    }
+  }
 
   tags = module.tags.tags
+}
+
+################################################################################
+# Cluster Autoscaler - Helm Chart
+################################################################################
+
+resource "helm_release" "cluster_autoscaler" {
+  namespace = "kube-system"
+  name      = "cluster-autoscaler"
+
+  repository = "https://kubernetes.github.io/autoscaler"
+  chart      = "cluster-autoscaler"
+  version    = "9.57.0"
+  wait       = false
+
+  values = [
+    <<-EOT
+    awsRegion: ${local.region}
+    rbac:
+      serviceAccount:
+        name: cluster-autoscaler
+    autoDiscovery:
+      clusterName: ${module.eks.cluster_name}
+    EOT
+  ]
 }

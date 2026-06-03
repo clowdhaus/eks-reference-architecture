@@ -128,7 +128,7 @@ data "aws_iam_policy_document" "this" {
 
 module "sagemaker_sg" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 5.0"
+  version = "~> 6.0"
 
   name        = "${local.name}-sagemaker"
   description = "Security group for Sagemaker"

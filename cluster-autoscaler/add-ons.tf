@@ -31,7 +31,7 @@ resource "helm_release" "cluster_autoscaler" {
 
   repository = "https://kubernetes.github.io/autoscaler"
   chart      = "cluster-autoscaler"
-  version    = "9.57.0"
+  version    = "9.58.0"
   wait       = false
 
   values = [

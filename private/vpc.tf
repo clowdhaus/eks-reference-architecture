@@ -377,7 +377,7 @@ resource "aws_cloudwatch_log_group" "client_vpn" {
 
 module "client_vpn_sg" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 5.0"
+  version = "~> 6.0"
 
   name        = "aws-client-vpn"
   description = "Security group for AWS Client VPN"

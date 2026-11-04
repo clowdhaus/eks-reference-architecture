@@ -66,7 +66,7 @@ resource "helm_release" "prometheus_adapter" {
 
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "prometheus-adapter"
-  version    = "5.3.0"
+  version    = "5.4.0"
   wait       = false
 }
 

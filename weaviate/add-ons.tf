@@ -81,7 +81,7 @@ resource "helm_release" "weaviate" {
 
   repository = "https://weaviate.github.io/weaviate-helm"
   chart      = "weaviate"
-  version    = "17.8.3"
+  version    = "17.9.0"
   wait       = false
 
   values = [
